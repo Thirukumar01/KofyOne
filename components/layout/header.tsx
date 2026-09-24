@@ -1,6 +1,8 @@
 ﻿import Link from 'next/link';
 import { siteConfig } from '@/config/site';
 import { Badge } from '@/components/ui/badge';
+import { MainNav } from '@/components/navigation/main-nav';
+import { MobileNav } from '@/components/navigation/mobile-nav';
 
 export function Header() {
   return (
@@ -15,32 +17,25 @@ export function Header() {
               Microsoft Ecosystem
             </Badge>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            {siteConfig.mainNav.slice(0, 4).map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="transition-colors hover:text-zinc-900 dark:hover:text-zinc-50"
-              >
-                {item.title}
-              </Link>
-            ))}
-          </nav>
+          <MainNav />
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/resources"
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
-          >
-            Explore Resources
-          </Link>
+          <div className="hidden sm:flex items-center gap-3">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/resources"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
+            >
+              Explore Resources
+            </Link>
+          </div>
+          <MobileNav />
         </div>
       </div>
     </header>

@@ -5,3 +5,4 @@ export * from './resource';
 export * from './analytics';
 export * from './search';
 export * from './database';
+export * from './user';

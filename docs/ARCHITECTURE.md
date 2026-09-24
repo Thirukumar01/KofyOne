@@ -35,21 +35,31 @@ The codebase enforces strict separation of concerns across standard directories:
 ```
 kofyone/
 ├── app/                      # Next.js App Router
-│   ├── (admin)/              # Admin Portal route group (guarded)
-│   ├── (auth)/               # Authentication route group (sign in/up)
-│   ├── (public)/             # Public user-facing discovery route group
+│   ├── (admin)/admin/        # Guarded Admin Portal route group
+│   ├── (auth)/login/         # Authentication route group (sign in/up)
+│   ├── (public)/resources/   # Public resource discovery route group
 │   ├── globals.css           # Global Tailwind CSS tokens
 │   ├── layout.tsx            # Global layout with font, nav, and telemetry
+│   ├── not-found.tsx         # Accessible, global 404 handler
 │   └── page.tsx              # Architectural showcase & brand hero
 ├── components/               # Modular UI Layer
+│   ├── admin/                # Admin-specific components (e.g. AdminHeader)
+│   ├── categories/           # Category badges, filter lists, and chips
 │   ├── common/               # Shared cross-cutting components (e.g. AnalyticsProvider)
-│   ├── layout/               # Header, Footer, Sidebar, Navigation
+│   ├── layout/               # Header, Footer, Responsive navigation containers
+│   ├── navigation/           # Accessible MainNav and MobileNav components
+│   ├── platforms/            # Platform selectors and ecosystem indicators
+│   ├── resources/            # Resource cards, grids, and action buttons
+│   ├── shared/               # Reusable states: LoadingState, EmptyState, ErrorState
 │   └── ui/                   # Reusable Design System (Button, Badge, Card, Input)
-├── config/                   # Configuration & Constants
-│   ├── platforms.ts          # Initial platform configurations & defaults
+├── config/                   # Centralized Configuration & Constants
+│   ├── categories.ts         # Initial category registry (Student, AI, Cloud, Dev, Prod)
+│   ├── env.ts                # Safe, typed environment access (clientEnv, getServerEnv)
+│   ├── features.ts           # Centralized feature flag toggles
+│   ├── platforms.ts          # Initial platform configurations & defaults (Microsoft)
 │   └── site.ts               # Brand name, tagline, navigation menus, links
 ├── docs/                     # Source of Truth Documentation
-│   ├── phases/               # Phase completion reports (Phase 0, Phase 1...)
+│   ├── phases/               # Phase completion reports (phase-0-report.md, phase-1-report.md...)
 │   ├── ARCHITECTURE.md       # Full architecture specification
 │   └── PROJECT-CONTEXT.md    # Product vision, stack, and AI continuity rules
 ├── hooks/                    # Reusable React Hooks
@@ -59,12 +69,15 @@ kofyone/
 │   ├── analytics/            # PostHog analytics client & event dispatcher
 │   ├── search/               # PostgreSQL Full-Text Search service abstraction
 │   ├── storage/              # Cloudflare R2 object storage client & URL generator
-│   ├── supabase/             # Supabase clients (browser, server, admin/service-role)
+│   ├── supabase/             # Supabase clients (browser, server, admin, auth, db helpers)
 │   ├── tracking/             # Dynamic URL attribution builder & domain validator
+│   ├── url.ts                # General URL validation, query injection, and extraction
 │   └── utils.ts              # Tailwind class merge & formatting utilities
 ├── public/                   # Static public assets
 ├── supabase/                 # Database Migrations & Schemas
-│   └── migrations/           # Versioned PostgreSQL DDL & RLS migration scripts
+│   ├── functions/            # Supabase Edge Functions
+│   ├── migrations/           # Versioned PostgreSQL DDL & RLS migration scripts
+│   └── seed/                 # Development seed data for local databases
 └── types/                    # Strictly Typed Domain Models
     ├── analytics.ts          # PostHog event names and payloads
     ├── category.ts           # Category interfaces
@@ -72,7 +85,9 @@ kofyone/
     ├── platform.ts           # Generic Platform model interface
     ├── resource.ts           # Resource model and metadata interfaces
     ├── search.ts             # Search queries, filters, and result pagination
-    └── tracking.ts           # Dynamic tracking configuration interfaces
+    ├── tracking.ts           # Dynamic tracking configuration interfaces
+    ├── user.ts               # UserProfile, UserRole, UserSession domain types
+    └── index.ts              # Barrel export for all domain types
 ```
 
 ---
@@ -83,24 +98,19 @@ Database engine: **PostgreSQL 15+ hosted on Supabase**.
 
 ### Core Tables
 1. **`platforms`**: Generic platforms. First record: Microsoft (`slug = 'microsoft'`).
-2. **`tracking_configs`**: Campaign attribution configurations per platform (e.g. parameter `wt.mc_id`, value `studentamb_504640`).
-3. **`categories`**: Topic classification (Student Programs, Cloud & Azure, Certifications, AI & Copilot, Developer Tools).
+2. **`tracking_configs`**: Campaign attribution configurations per platform (parameter `wt.mc_id`, value `studentamb_504640`).
+3. **`categories`**: Topic classification (Student, AI, Cloud, Developer, Productivity).
 4. **`resources`**: Official educational and developer assets with metadata, official URLs, view/click counters, and generated `search_vector`.
 5. **`resource_categories`**: Many-to-many join table between resources and categories.
 6. **`user_favorites`**: Many-to-many relationship linking `auth.users` to saved resources.
 7. **`user_recently_viewed`**: User visit history and timestamp tracking.
 8. **`audit_logs`**: Administrative change logs with before/after state diffs.
 
-### Row Level Security (RLS) Strategy
-- Public read access is granted only to active platforms, enabled tracking configs, active categories, and published resources.
-- Personal user data (`user_favorites`, `user_recently_viewed`) is strictly restricted to matching `auth.uid()`.
-- Administrative mutations require `role = 'admin'` or execution via the isolated Server-Side Service Role client.
-
 ---
 
 ## 4. Platform Abstraction Layer
 
-The platform architecture is fully decoupled from Microsoft:
+The platform architecture is fully decoupled from vendor specifics:
 - The `Platform` interface (`types/platform.ts`) defines generic metadata (`id`, `name`, `slug`, `website_url`, `domain`, `is_active`, `display_order`).
 - `Resource` references `platform_id` rather than embedding vendor-specific logic.
 - Adding a future platform requires zero database schema modifications or component rewrites—only an administrative insert into `platforms`.
@@ -113,15 +123,13 @@ Student ambassadors and community contributors need attribution on official ecos
 
 ### Separation of Concerns:
 - **Storage**: `tracking_configs` stores the parameter and value.
-- **Decoration**: `buildTrackedUrl(officialUrl, trackingConfig)` in `lib/tracking/url-builder.ts` safely parses the destination URL and injects the attribution parameter without breaking existing query strings or anchor tags.
-- **Domain Validation**: `validatePlatformDomain(url, platformDomain)` prevents phishing or unauthorized open redirects.
+- **Decoration**: `buildTrackedUrl(officialUrl, trackingConfig)` in `lib/tracking/url-builder.ts` safely parses destination URLs and injects attribution parameters without breaking existing query strings or anchor tags.
+- **General Utilities**: `lib/url.ts` provides URL validation, domain extraction, query parameter merging, and fragment preservation.
 - **Interaction**: The `useTracking` hook decorates links in client components and automatically triggers a `resource_opened` analytics event.
 
 ---
 
 ## 6. PostgreSQL Full-Text Search Architecture
-
-Instead of incurring external search engine operational costs, KofyOne leverages PostgreSQL native Full-Text Search:
 
 1. **`search_vector` Column**: A stored `TSVECTOR` generated on the `resources` table with weighted terms:
    - Weight `A`: Resource Name
@@ -136,16 +144,7 @@ Instead of incurring external search engine operational costs, KofyOne leverages
 
 Telemetry is powered by **PostHog**:
 - Client-side event dispatching uses `trackEvent(eventName, payload)` with strict TypeScript validation against `AnalyticsEventPayloadMap`.
-- Supported events:
-  - `user_signed_in`
-  - `resource_viewed`
-  - `resource_opened`
-  - `resource_favorited`
-  - `platform_selected`
-  - `category_selected`
-  - `search_performed`
-  - `event_viewed`
-  - `notification_opened`
+- Supported events: `user_signed_in`, `resource_viewed`, `resource_opened`, `resource_favorited`, `platform_selected`, `category_selected`, `search_performed`, `event_viewed`, `notification_opened`.
 - Privacy: IP autocapture is disabled by default; analytics operates in dry-run mode when no API key is configured.
 
 ---
@@ -162,7 +161,8 @@ Object storage uses Cloudflare R2:
 ## 9. Security & Access Control
 
 - **Client vs. Server Separation**:
+  - `config/env.ts` provides `clientEnv` (safe for browser) and `getServerEnv()` (guarded, throws on client).
   - `lib/supabase/client.ts` uses the Anon key and runs in the browser.
   - `lib/supabase/admin.ts` uses the Service Role key and throws an immediate error if executed in client-side code.
 - **Environment Isolation**: `.env.example` documents all parameters; real secrets must never be committed.
-- **Route Guarding**: Route groups `(admin)` are architected for middleware session validation in Phase 2.
+- **Route Guarding**: Route groups `(admin)` are architected for middleware session validation.
