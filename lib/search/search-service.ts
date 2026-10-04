@@ -20,26 +20,16 @@ export class PostgresSearchService implements ISearchService {
 
     const supabase = await createClient();
 
-    // Call stored search procedure if available in Supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc('search_resources', {
-      search_term: query,
-      filter_platform_id: filters?.platformId,
-      filter_category_id: filters?.categoryIds?.[0],
-      result_limit: limit,
-      result_offset: offset,
-    });
+    const search = query.replace(/[%_,]/g, ' ').trim();
+    let request = supabase.from('resources').select('*').eq('is_published', true);
+    if (search) request = request.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    if (filters?.platformId) request = request.eq('platform_id', filters.platformId);
+    const { data, error } = await request
+      .order('featured', { ascending: false })
+      .order('display_order', { ascending: true })
+      .range(offset, offset + limit - 1);
 
-    if (error) {
-      // In Phase 0 / unmigrated dev state, return empty result set gracefully
-      return {
-        items: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
+    if (error) throw new Error(`Resource search failed: ${error.message}`);
 
     const items: SearchResultItem[] = ((data as unknown[]) || []).map((row: unknown) => {
       const typedRow = row as ResourceWithRelations & { rank: number };
@@ -51,10 +41,10 @@ export class PostgresSearchService implements ISearchService {
 
     return {
       items,
-      total: items.length,
+      total: items.length < limit ? offset + items.length : offset + items.length + 1,
       page,
       limit,
-      totalPages: Math.ceil(items.length / limit) || 1,
+      totalPages: items.length < limit ? Math.max(1, Math.ceil((offset + items.length) / limit)) : page + 1,
     };
   }
 }

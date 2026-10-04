@@ -1,8 +1,13 @@
 ﻿import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { siteConfig } from '@/config/site';
+import { getCurrentUserProfile } from '@/lib/supabase/auth';
+import { redirect } from 'next/navigation';
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const profile = await getCurrentUserProfile();
+  if (!profile) redirect('/login?next=/admin');
+  if (profile.role !== 'admin') redirect('/');
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800">
@@ -11,7 +16,7 @@ export default function AdminDashboardPage() {
             Admin Portal
           </h1>
           <p className="text-sm text-zinc-500">
-            Phase 0 Foundation • Platform & Resource Management Architecture
+            Manage catalog content, visibility, and platform configuration.
           </p>
         </div>
         <Badge variant="outline">Admin Access Guarded</Badge>

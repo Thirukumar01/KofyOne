@@ -13,7 +13,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="flex flex-col items-center text-center">
         <Badge variant="brand" className="mb-4">
-          Phase 0 Foundation • Microsoft Ecosystem First
+          Official resources for the Microsoft ecosystem
         </Badge>
 
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-50">
@@ -46,10 +46,10 @@ export default function HomePage() {
       <section className="mt-20">
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Locked Architecture & Foundations
+            One place to find your next build
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Platform-independent architecture designed for high scalability and security.
+            Search, save, and revisit trustworthy learning and developer resources.
           </p>
         </div>
 

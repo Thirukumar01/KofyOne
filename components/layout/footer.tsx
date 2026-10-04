@@ -15,7 +15,7 @@ export function Footer() {
             </p>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Phase 0 Foundation Architecture • Student Resource Discovery
+            Independent resource discovery for the Microsoft ecosystem
           </p>
           <div className="flex gap-4 text-xs text-zinc-500 dark:text-zinc-400">
             <Link href="/privacy" className="hover:underline">

@@ -5,20 +5,17 @@
 
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/database';
+import { clientEnv } from '@/config/env';
 
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // In build or preview environments without Supabase configured, return null-safe dummy or warn
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Supabase URL or Anon Key is missing in environment variables.');
-    }
+  if (!clientEnv.supabase.isConfigured) {
+    throw new Error(
+      'Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+    );
   }
 
   return createBrowserClient<Database>(
-    supabaseUrl || 'https://placeholder.supabase.co',
-    supabaseAnonKey || 'placeholder-anon-key'
+    clientEnv.supabase.url,
+    clientEnv.supabase.anonKey
   );
 }

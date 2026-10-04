@@ -20,6 +20,30 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          role: 'student' | 'educator' | 'admin' | 'guest';
+          full_name: string | null;
+          avatar_url: string | null;
+          preferred_platform: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          role?: 'student' | 'educator' | 'admin' | 'guest';
+          full_name?: string | null;
+          avatar_url?: string | null;
+          preferred_platform?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
+        Relationships: [];
+      };
       platforms: {
         Row: Platform;
         Insert: Omit<Platform, 'id' | 'created_at' | 'updated_at'> & {
