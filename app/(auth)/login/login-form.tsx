@@ -394,7 +394,6 @@ export function LoginForm() {
             setMessage('');
             setStatus('idle');
             setTurnstileToken('');
-            turnstileRef.current?.reset();
           }}
           className={`py-1.5 rounded-md transition-all ${
             mode === 'signin'
@@ -411,7 +410,6 @@ export function LoginForm() {
             setMessage('');
             setStatus('idle');
             setTurnstileToken('');
-            turnstileRef.current?.reset();
           }}
           className={`py-1.5 rounded-md transition-all ${
             mode === 'signup'
@@ -428,7 +426,6 @@ export function LoginForm() {
             setMessage('');
             setStatus('idle');
             setTurnstileToken('');
-            turnstileRef.current?.reset();
           }}
           className={`py-1.5 rounded-md transition-all ${
             mode === 'otp'
@@ -498,14 +495,26 @@ export function LoginForm() {
             action="login"
             onVerify={(token) => {
               setTurnstileToken(token);
-              if (status === 'error' && message.includes('verification')) {
-                setStatus('idle');
-                setMessage('');
-              }
+              setStatus((curr) => {
+                if (curr === 'error') {
+                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
+                  return 'idle';
+                }
+                return curr;
+              });
             }}
             onExpire={() => setTurnstileToken('')}
             onError={() => setTurnstileToken('')}
-            onReset={() => setTurnstileToken('')}
+            onReset={() => {
+              setTurnstileToken('');
+              setStatus((curr) => {
+                if (curr === 'error') {
+                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
+                  return 'idle';
+                }
+                return curr;
+              });
+            }}
           />
 
           <Button className="w-full" disabled={isBlocked} aria-busy={status === 'loading'}>
@@ -715,14 +724,26 @@ export function LoginForm() {
             action="signup"
             onVerify={(token) => {
               setTurnstileToken(token);
-              if (status === 'error' && message.includes('verification')) {
-                setStatus('idle');
-                setMessage('');
-              }
+              setStatus((curr) => {
+                if (curr === 'error') {
+                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
+                  return 'idle';
+                }
+                return curr;
+              });
             }}
             onExpire={() => setTurnstileToken('')}
             onError={() => setTurnstileToken('')}
-            onReset={() => setTurnstileToken('')}
+            onReset={() => {
+              setTurnstileToken('');
+              setStatus((curr) => {
+                if (curr === 'error') {
+                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
+                  return 'idle';
+                }
+                return curr;
+              });
+            }}
           />
 
           <Button

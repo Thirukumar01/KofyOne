@@ -45,15 +45,45 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
     const renderWidgetRef = useRef<(() => void) | null>(null);
+    const stuckTimerRef = useRef<number | null>(null);
+    const maxTimerRef = useRef<number | null>(null);
+
     const [status, setStatus] = useState<WidgetStatus>('loading');
     const [statusMessage, setStatusMessage] = useState<string>('');
     const [showStuckRetry, setShowStuckRetry] = useState<boolean>(false);
 
+    // Keep callback props in refs to prevent unnecessary widget unmount/re-render on parent typing
+    const onVerifyRef = useRef(onVerify);
+    onVerifyRef.current = onVerify;
+    const onExpireRef = useRef(onExpire);
+    onExpireRef.current = onExpire;
+    const onErrorRef = useRef(onError);
+    onErrorRef.current = onError;
+    const onResetRef = useRef(onReset);
+    onResetRef.current = onReset;
+
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
 
-    // Reset helper: completely tear down existing widget and recreate if errored
+    // Helper to clear pending timers
+    const clearTimers = useCallback(() => {
+      if (stuckTimerRef.current !== null) {
+        window.clearTimeout(stuckTimerRef.current);
+        stuckTimerRef.current = null;
+      }
+      if (maxTimerRef.current !== null) {
+        window.clearTimeout(maxTimerRef.current);
+        maxTimerRef.current = null;
+      }
+    }, []);
+
+    // Reset helper: completely tear down existing widget and recreate cleanly
     const handleReset = useCallback(() => {
+      clearTimers();
       setShowStuckRetry(false);
+      setStatus('loading');
+      setStatusMessage('');
+      onResetRef.current?.();
+
       if (typeof window !== 'undefined' && window.turnstile) {
         if (widgetIdRef.current) {
           try {
@@ -63,15 +93,15 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           }
           widgetIdRef.current = null;
         }
-        setStatus('loading');
-        setStatusMessage('');
-        onReset?.();
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+        }
         // Give the DOM a tick to clear before rendering fresh challenge
         setTimeout(() => {
           renderWidgetRef.current?.();
         }, 50);
       }
-    }, [onReset]);
+    }, [clearTimers]);
 
     // Expose imperative API for parent form
     useImperativeHandle(
@@ -103,6 +133,8 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
       const renderWidget = () => {
         if (!isMounted || !containerRef.current || !window.turnstile) return;
 
+        clearTimers();
+
         // Clean up previous widget instance if container already rendered
         if (widgetIdRef.current) {
           try {
@@ -113,15 +145,19 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           widgetIdRef.current = null;
         }
 
-        // Stuck detection timer: after 6 seconds of verifying without resolution, offer retry
-        const stuckTimer = window.setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+        }
+
+        // Stuck detection timer: after 8 seconds of verifying without resolution, offer retry
+        stuckTimerRef.current = window.setTimeout(() => {
           if (isMounted) {
             setShowStuckRetry(true);
           }
-        }, 6000);
+        }, 8000);
 
-        // Maximum challenge timeout: if challenge hangs indefinitely (>15s), transition to error
-        const maxTimer = window.setTimeout(() => {
+        // Maximum challenge timeout: if challenge hangs indefinitely (>25s), transition to error
+        maxTimerRef.current = window.setTimeout(() => {
           if (isMounted) {
             setStatus((current) => {
               if (current !== 'verified') {
@@ -130,8 +166,9 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
               }
               return current;
             });
+            onErrorRef.current?.('timeout');
           }
-        }, 15000);
+        }, 25000);
 
         try {
           const id = window.turnstile.render(containerRef.current, {
@@ -140,18 +177,17 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
             theme,
             size: 'normal',
             retry: 'auto',
+            'retry-interval': 8000,
             callback: (token: string) => {
-              window.clearTimeout(stuckTimer);
-              window.clearTimeout(maxTimer);
+              clearTimers();
               if (!isMounted) return;
               setShowStuckRetry(false);
               setStatus('verified');
               setStatusMessage('Human verification confirmed.');
-              onVerify(token);
+              onVerifyRef.current(token);
             },
             'error-callback': (errorCode?: string) => {
-              window.clearTimeout(stuckTimer);
-              window.clearTimeout(maxTimer);
+              clearTimers();
               if (!isMounted) return;
               setShowStuckRetry(false);
               setStatus('error');
@@ -164,25 +200,23 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
                 message = `Verification error (${errorCode}). If using an AdBlocker or Private DNS, please disable it and click Retry.`;
               }
               setStatusMessage(message);
-              onError?.(errorCode);
+              onErrorRef.current?.(errorCode);
             },
             'timeout-callback': () => {
-              window.clearTimeout(stuckTimer);
-              window.clearTimeout(maxTimer);
+              clearTimers();
               if (!isMounted) return;
               setShowStuckRetry(false);
               setStatus('error');
               setStatusMessage('Verification challenge timed out. Please click Retry.');
-              onError?.('timeout');
+              onErrorRef.current?.('timeout');
             },
             'expired-callback': () => {
-              window.clearTimeout(stuckTimer);
-              window.clearTimeout(maxTimer);
+              clearTimers();
               if (!isMounted) return;
               setShowStuckRetry(false);
               setStatus('expired');
               setStatusMessage('Verification session expired. Please refresh the challenge.');
-              onExpire?.();
+              onExpireRef.current?.();
             },
           });
 
@@ -191,12 +225,12 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
             setStatus((current) => (current === 'loading' ? 'ready' : current));
           }
         } catch (renderError) {
-          window.clearTimeout(stuckTimer);
-          window.clearTimeout(maxTimer);
+          clearTimers();
           console.warn('[Turnstile] Render error:', renderError);
           if (isMounted) {
             setStatus('error');
             setStatusMessage('Failed to initialize verification challenge. Please click Retry.');
+            onErrorRef.current?.('render-error');
           }
         }
       };
@@ -222,6 +256,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           if (isMounted) {
             setStatus('error');
             setStatusMessage('Unable to load security verification script. Check your internet connection.');
+            onErrorRef.current?.('script-error');
           }
         };
         document.head.appendChild(scriptElement);
@@ -239,6 +274,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           if (isMounted && !window.turnstile) {
             setStatus('error');
             setStatusMessage('Security verification script timed out.');
+            onErrorRef.current?.('script-timeout');
           }
         }, 8000);
 
@@ -250,6 +286,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
 
       return () => {
         isMounted = false;
+        clearTimers();
         if (widgetIdRef.current && window.turnstile) {
           try {
             window.turnstile.remove(widgetIdRef.current);
@@ -259,7 +296,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           widgetIdRef.current = null;
         }
       };
-    }, [siteKey, action, theme, onVerify, onError, onExpire]);
+    }, [siteKey, action, theme, clearTimers]);
 
     // Unconfigured Development Alert View
     if (status === 'unconfigured') {
