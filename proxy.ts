@@ -91,7 +91,21 @@ export async function proxy(request: NextRequest) {
   // 2. Authenticated access to Admin routes: Verify role at proxy level (defense-in-depth)
   if (user && isAdminRequired) {
     try {
-      // Check role in user_roles table or profiles
+      const configuredAdmin = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+      if (user.email && configuredAdmin && user.email.toLowerCase() === configuredAdmin) {
+        // Admin confirmed via verified session email
+        return response;
+      }
+
+      // Check role via is_admin RPC
+      const { data: isAdminRpc } = await (supabase.rpc as unknown as (fn: string) => Promise<{ data: boolean | null }>)(
+        'is_admin'
+      );
+      if (isAdminRpc === true) {
+        return response;
+      }
+
+      // Check role in user_roles table
       const { data: roleData } = await (supabase.from('user_roles') as unknown as {
         select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
       })
@@ -101,20 +115,24 @@ export async function proxy(request: NextRequest) {
 
       const role = (roleData as { role?: string } | null)?.role;
 
-      if (role !== 'admin') {
-        // Fallback check on profiles table
-        const { data: profileData } = await (supabase.from('profiles') as unknown as {
-          select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
-        })
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if ((profileData as { role?: string } | null)?.role !== 'admin') {
-          // Redirect to access-denied screen
-          return NextResponse.redirect(new URL('/access-denied', request.url));
-        }
+      if (role === 'admin') {
+        return response;
       }
+
+      // Fallback check on profiles table
+      const { data: profileData } = await (supabase.from('profiles') as unknown as {
+        select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
+      })
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if ((profileData as { role?: string } | null)?.role === 'admin') {
+        return response;
+      }
+
+      // Redirect non-admin authenticated users to access-denied
+      return NextResponse.redirect(new URL('/access-denied', request.url));
     } catch {
       // If DB read fails, redirect away from admin
       return NextResponse.redirect(new URL('/access-denied', request.url));

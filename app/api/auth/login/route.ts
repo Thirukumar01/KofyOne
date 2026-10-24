@@ -143,14 +143,31 @@ export async function POST(request: Request) {
         console.warn('[Login Handler] Role query warning:', roleErr);
       }
 
+      if (configuredAdminEmail && loginEmail === configuredAdminEmail) {
+        role = 'admin';
+      }
+
       const defaultDestination = role === 'admin' ? '/admin' : '/dashboard';
       const redirectUrl = getSafeRedirectUrl(nextParam, defaultDestination);
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         role,
         redirectTo: redirectUrl,
       });
+
+      if (role === 'admin' && configuredAdminEmail && loginEmail === configuredAdminEmail) {
+        const token = Buffer.from(configuredAdminEmail).toString('base64');
+        response.cookies.set('kofyone_admin_session', token, {
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7,
+        });
+      }
+
+      return response;
     }
 
     // If Supabase authentication failed or was unreachable:

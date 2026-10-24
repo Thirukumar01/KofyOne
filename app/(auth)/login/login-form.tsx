@@ -7,7 +7,6 @@ import { Eye, EyeOff, Check, HelpCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { OAuthButtons } from '@/components/auth/oauth-buttons';
 import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/auth/turnstile-widget';
 import { validatePassword } from '@/lib/auth/password';
 import { validateUsername } from '@/lib/auth/username';
@@ -386,22 +385,6 @@ export function LoginForm() {
 
   return (
     <div className="space-y-5">
-      {/* Social Logins */}
-      <OAuthButtons
-        disabled={isBlocked}
-        onError={(err) => {
-          setStatus('error');
-          setMessage(err);
-        }}
-      />
-
-      <div className="relative flex items-center justify-center py-1">
-        <div className="border-t border-zinc-200 dark:border-zinc-800 w-full" />
-        <span className="bg-white dark:bg-zinc-900 px-3 text-xs text-zinc-400 uppercase tracking-wider font-medium absolute">
-          or continue with email & credentials
-        </span>
-      </div>
-
       {/* Mode Selector Tabs */}
       <div className="grid grid-cols-3 p-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-lg text-xs font-medium">
         <button

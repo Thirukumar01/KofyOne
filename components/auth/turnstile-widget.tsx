@@ -47,11 +47,13 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
     const renderWidgetRef = useRef<(() => void) | null>(null);
     const [status, setStatus] = useState<WidgetStatus>('loading');
     const [statusMessage, setStatusMessage] = useState<string>('');
+    const [showStuckRetry, setShowStuckRetry] = useState<boolean>(false);
 
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
 
     // Reset helper: completely tear down existing widget and recreate if errored
     const handleReset = useCallback(() => {
+      setShowStuckRetry(false);
       if (typeof window !== 'undefined' && window.turnstile) {
         if (widgetIdRef.current) {
           try {
@@ -95,6 +97,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
 
       let isMounted = true;
       setStatus('loading');
+      setShowStuckRetry(false);
 
       // Helper to render the Turnstile widget
       const renderWidget = () => {
@@ -110,6 +113,26 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           widgetIdRef.current = null;
         }
 
+        // Stuck detection timer: after 6 seconds of verifying without resolution, offer retry
+        const stuckTimer = window.setTimeout(() => {
+          if (isMounted) {
+            setShowStuckRetry(true);
+          }
+        }, 6000);
+
+        // Maximum challenge timeout: if challenge hangs indefinitely (>15s), transition to error
+        const maxTimer = window.setTimeout(() => {
+          if (isMounted) {
+            setStatus((current) => {
+              if (current !== 'verified') {
+                setStatusMessage('Verification challenge timed out. Please click Retry.');
+                return 'error';
+              }
+              return current;
+            });
+          }
+        }, 15000);
+
         try {
           const id = window.turnstile.render(containerRef.current, {
             sitekey: siteKey,
@@ -118,13 +141,19 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
             size: 'normal',
             retry: 'auto',
             callback: (token: string) => {
+              window.clearTimeout(stuckTimer);
+              window.clearTimeout(maxTimer);
               if (!isMounted) return;
+              setShowStuckRetry(false);
               setStatus('verified');
               setStatusMessage('Human verification confirmed.');
               onVerify(token);
             },
             'error-callback': (errorCode?: string) => {
+              window.clearTimeout(stuckTimer);
+              window.clearTimeout(maxTimer);
               if (!isMounted) return;
+              setShowStuckRetry(false);
               setStatus('error');
               let message = 'Verification could not be completed. Please click Retry.';
               if (errorCode === '110200') {
@@ -137,8 +166,20 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
               setStatusMessage(message);
               onError?.(errorCode);
             },
-            'expired-callback': () => {
+            'timeout-callback': () => {
+              window.clearTimeout(stuckTimer);
+              window.clearTimeout(maxTimer);
               if (!isMounted) return;
+              setShowStuckRetry(false);
+              setStatus('error');
+              setStatusMessage('Verification challenge timed out. Please click Retry.');
+              onError?.('timeout');
+            },
+            'expired-callback': () => {
+              window.clearTimeout(stuckTimer);
+              window.clearTimeout(maxTimer);
+              if (!isMounted) return;
+              setShowStuckRetry(false);
               setStatus('expired');
               setStatusMessage('Verification session expired. Please refresh the challenge.');
               onExpire?.();
@@ -150,6 +191,8 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
             setStatus((current) => (current === 'loading' ? 'ready' : current));
           }
         } catch (renderError) {
+          window.clearTimeout(stuckTimer);
+          window.clearTimeout(maxTimer);
           console.warn('[Turnstile] Render error:', renderError);
           if (isMounted) {
             setStatus('error');
@@ -259,9 +302,36 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
 
         {/* Loading State Feedback */}
         {status === 'loading' && (
-          <div className="flex items-center justify-center gap-2 py-1 text-xs text-zinc-500 dark:text-zinc-400">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-500" />
-            <span>Verifying browser security environment…</span>
+          <div className="flex flex-col items-center justify-center gap-1 py-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-500" />
+              <span>Verifying browser security environment…</span>
+            </div>
+            {showStuckRetry && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-orange-600 hover:underline dark:text-orange-400"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Taking too long? Click here to retry
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Stuck helper prompt if challenge takes > 6s */}
+        {showStuckRetry && status === 'ready' && (
+          <div className="flex items-center justify-center gap-1 py-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+            <span>Verification taking longer than usual?</span>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="font-semibold text-orange-600 hover:underline dark:text-orange-400 flex items-center gap-1 ml-1"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Retry
+            </button>
           </div>
         )}
 

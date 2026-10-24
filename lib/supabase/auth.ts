@@ -74,51 +74,76 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   try {
     const supabase = await createClient();
 
-    // 1. Fetch user role from private user_roles table first
-    const { data: roleRow } = await (supabase.from('user_roles') as unknown as {
-      select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
-    })
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
-    const roleData = roleRow as { role?: UserRole } | null;
-
-    if (roleData?.role) {
-      role = roleData.role;
+    // 1. Check is_admin() SECURITY DEFINER function first (bypasses RLS table restrictions safely)
+    try {
+      const { data: isAdminRpc } = await (supabase.rpc as unknown as (fn: string) => Promise<{ data: boolean | null }>)(
+        'is_admin'
+      );
+      if (isAdminRpc === true) {
+        role = 'admin';
+      }
+    } catch {
+      // Safe fallback if RPC unavailable
     }
 
-    // 2. Fetch profile attributes from profiles table
-    const { data: profileRow } = await (supabase.from('profiles') as unknown as {
-      select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
-    })
-      .select('role, username, full_name, avatar_url, preferred_platform')
-      .eq('id', user.id)
-      .maybeSingle();
-    const profileData = profileRow as {
-      role?: UserRole;
-      username?: string | null;
-      full_name?: string | null;
-      avatar_url?: string | null;
-      preferred_platform?: string | null;
-    } | null;
+    // 2. Fetch user role from private user_roles table if not already resolved as admin
+    if (role !== 'admin') {
+      try {
+        const { data: roleRow } = await (supabase.from('user_roles') as unknown as {
+          select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
+        })
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+        const roleData = roleRow as { role?: UserRole } | null;
 
-    if (profileData) {
-      // If user_roles wasn't populated yet, fallback to profileData.role
-      if (!roleData?.role && profileData.role) {
-        role = profileData.role;
+        if (roleData?.role) {
+          role = roleData.role;
+        }
+      } catch {
+        // Safe fallback
       }
-      username = profileData.username ?? null;
-      fullName = profileData.full_name ?? fullName;
-      avatarUrl = profileData.avatar_url ?? avatarUrl;
-      preferredPlatform = profileData.preferred_platform ?? preferredPlatform;
-    } else {
-      // Profile fallback from user metadata (e.g., OAuth display name)
-      fullName = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null;
-      username = (user.user_metadata?.username as string) || null;
-      avatarUrl = (user.user_metadata?.avatar_url as string) || null;
+    }
+
+    // 3. Fetch profile attributes from profiles table (safe column selection without non-existent columns)
+    try {
+      const { data: profileRow } = await (supabase.from('profiles') as unknown as {
+        select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
+      })
+        .select('role, full_name, display_name, avatar_url, preferred_platform')
+        .eq('id', user.id)
+        .maybeSingle();
+      const profileData = profileRow as {
+        role?: UserRole;
+        full_name?: string | null;
+        display_name?: string | null;
+        avatar_url?: string | null;
+        preferred_platform?: string | null;
+      } | null;
+
+      if (profileData) {
+        if (role !== 'admin' && profileData.role) {
+          role = profileData.role;
+        }
+        fullName = profileData.full_name || profileData.display_name || fullName;
+        avatarUrl = profileData.avatar_url ?? avatarUrl;
+        preferredPlatform = profileData.preferred_platform ?? preferredPlatform;
+      } else {
+        // Profile fallback from user metadata (e.g., OAuth display name)
+        fullName = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null;
+        avatarUrl = (user.user_metadata?.avatar_url as string) || null;
+      }
+    } catch {
+      // Safe fallback
+    }
+
+    // 4. Verify designated administrator account by verified email
+    const configuredAdminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    if (user.email && configuredAdminEmail && user.email.toLowerCase() === configuredAdminEmail) {
+      role = 'admin';
     }
   } catch {
-    // If DB read fails, still return safe basic profile based on verified Auth user
+    // If client instantiation fails, still return safe basic profile based on verified Auth user
   }
 
   return {
