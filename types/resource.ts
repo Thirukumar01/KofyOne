@@ -1,4 +1,4 @@
-﻿/**
+/**
  * KofyOne - Resource Entity Types
  * Official educational/developer resource model linked to a platform and categories.
  */
@@ -31,6 +31,9 @@ export interface Resource {
   tracking_config_id: string | null;
   view_count: number;
   click_count: number;
+  subcategory?: string | null;
+  tags?: string[];
+  contributor_id?: string | null;
   metadata: ResourceMetadata;
   created_at: string;
   updated_at: string;

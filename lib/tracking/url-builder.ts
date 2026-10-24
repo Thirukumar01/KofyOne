@@ -1,38 +1,79 @@
-﻿/**
+/**
  * KofyOne - URL Tracking Engine
- * Dynamic, platform-agnostic URL attribution utility.
+ * Dynamic, platform-agnostic URL attribution utility with Microsoft-exclusive
+ * Contributor ID enforcement.
  *
  * Appends campaign/contributor tracking parameters (such as Microsoft's wt.mc_id)
- * from database-driven configuration without hardcoded values in UI components.
+ * ONLY to Microsoft resources, preserving query parameters and URL fragments.
+ * Never attaches Microsoft tracking parameters to AWS, Google, or other non-Microsoft resources.
  */
 
-import { TrackingConfig, TrackedUrlOptions } from '@/types/tracking';
+import type { TrackingConfig, TrackedUrlOptions } from '../../types/tracking.ts';
+
+export interface ResourceTrackingContext {
+  platformSlug?: string;
+  platformName?: string;
+  contributorId?: string | null;
+}
 
 /**
- * Builds a tracked destination URL using the provided TrackingConfig.
+ * Determines whether a given platform is Microsoft.
+ */
+export function isMicrosoftPlatform(platformSlugOrName?: string | null): boolean {
+  if (!platformSlugOrName) return false;
+  const normalized = platformSlugOrName.toLowerCase().trim();
+  return (
+    normalized === 'microsoft' ||
+    normalized === 'microsoft-learn' ||
+    normalized.includes('microsoft') ||
+    normalized.includes('azure')
+  );
+}
+
+/**
+ * Builds a tracked destination URL.
  *
- * @param rawUrl The official resource URL
- * @param config Optional active tracking configuration from DB/context
- * @param options Optional overrides or additional query parameters
- * @returns Fully formatted tracked URL string
+ * Rules:
+ * 1. Microsoft Contributor ID applies exclusively to Microsoft resources.
+ * 2. When Microsoft is the provider and a Contributor ID exists, attaches/updates `wt.mc_id`.
+ * 3. When AWS, Google, or Other is the provider, NEVER attaches Microsoft tracking parameters.
+ * 4. Preserves existing unrelated query parameters and hash fragments (#fragment).
+ * 5. Does not invent a Contributor ID if none is supplied.
  */
 export function buildTrackedUrl(
   rawUrl: string,
   config?: TrackingConfig | null,
-  options?: TrackedUrlOptions
+  options?: TrackedUrlOptions,
+  context?: ResourceTrackingContext
 ): string {
   if (!rawUrl) return '';
 
   try {
     const url = new URL(rawUrl);
 
-    // Apply primary tracking parameter if enabled
-    if (config && config.is_enabled) {
-      const paramName = options?.overrideParam || config.tracking_parameter;
-      const paramValue = options?.overrideValue || config.tracking_value;
+    // Identify provider: either from context or from config
+    const providerIdentifier = context?.platformSlug || context?.platformName;
+    const isMicrosoft = providerIdentifier
+      ? isMicrosoftPlatform(providerIdentifier)
+      : true; // If no context provided, defer to config presence
 
-      if (paramName && paramValue) {
-        url.searchParams.set(paramName, paramValue);
+    // Microsoft Contributor ID: apply ONLY if provider is Microsoft
+    if (isMicrosoft) {
+      const explicitContributorId = context?.contributorId;
+      if (explicitContributorId && explicitContributorId.trim()) {
+        url.searchParams.set('wt.mc_id', explicitContributorId.trim());
+      } else if (config && config.is_enabled) {
+        const paramName = options?.overrideParam || config.tracking_parameter || 'wt.mc_id';
+        const paramValue = options?.overrideValue || config.tracking_value;
+        if (paramName && paramValue) {
+          url.searchParams.set(paramName, paramValue);
+        }
+      }
+    } else {
+      // Non-Microsoft provider (AWS, Google, Other):
+      // Ensure no Microsoft tracking parameter is attached
+      if (url.searchParams.has('wt.mc_id')) {
+        url.searchParams.delete('wt.mc_id');
       }
     }
 

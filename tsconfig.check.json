@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "config/**/*.ts",
+    "hooks/**/*.ts",
+    "hooks/**/*.tsx",
+    "lib/**/*.ts",
+    "types/**/*.ts",
+    "proxy.ts",
+    "middleware.ts",
+    "vite.config.ts",
+    "cloudflare.config.ts"
+  ],
+  "exclude": ["node_modules", ".next", ".cloudflare", ".vinext", "dist"]
+}

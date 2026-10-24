@@ -1,153 +1,155 @@
-﻿import Link from 'next/link';
-import { siteConfig } from '@/config/site';
-import { INITIAL_PLATFORMS } from '@/config/platforms';
+import Link from 'next/link';
+import { getSiteBranding } from '@/lib/data/site-branding';
+import { getActivePlatforms, getPublishedResources } from '@/lib/supabase/db';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ResourceLogo } from '@/components/resources/resource-logo';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
-export default function HomePage() {
-  const activePlatform = INITIAL_PLATFORMS[0];
+export default async function HomePage() {
+  const [branding, { data: platforms }, { data: resources }] = await Promise.all([
+    getSiteBranding(),
+    getActivePlatforms(),
+    getPublishedResources(),
+  ]);
+
+  const featuredResources = resources.filter((r) => r.featured).slice(0, 6);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 space-y-16">
       {/* Hero Section */}
       <section className="flex flex-col items-center text-center">
-        <Badge variant="brand" className="mb-4">
-          Official resources for the Microsoft ecosystem
+        <Badge variant="brand" className="mb-4 flex items-center gap-1.5 shadow-sm">
+          <Sparkles className="h-3.5 w-3.5" />
+          Multi-Provider Technology Resource Discovery
         </Badge>
 
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-50">
-          {siteConfig.name}
+          {branding.app_name}
         </h1>
 
-        <p className="mt-4 text-xl font-medium text-blue-600 sm:text-2xl dark:text-blue-400">
-          {siteConfig.tagline}
+        <p className="mt-4 text-xl font-medium text-orange-600 sm:text-2xl dark:text-orange-400">
+          {branding.tagline}
         </p>
 
         <p className="mt-4 max-w-2xl text-base text-zinc-600 dark:text-zinc-400">
-          {siteConfig.description}
+          {branding.description}
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/resources">
-            <Button size="lg" className="shadow-md">
-              Explore Resources
+            <Button size="lg" className="shadow-md bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2">
+              Explore All Resources <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
           <Link href="/admin">
             <Button variant="outline" size="lg">
-              Admin Portal
+              Admin CMS Portal
             </Button>
           </Link>
         </div>
       </section>
 
-      {/* Architecture Foundations Grid */}
-      <section className="mt-20">
-        <div className="mb-8 text-center">
+      {/* Supported Ecosystems / Multi-Provider Grid */}
+      <section className="space-y-6">
+        <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            One place to find your next build
+            Supported Technology Ecosystems
           </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Search, save, and revisit trustworthy learning and developer resources.
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto">
+            Discover official training, sandboxes, developer packs, and student credits across major technology platforms.
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Active Ecosystem</CardTitle>
-                <Badge variant="success">Active</Badge>
-              </div>
-              <CardDescription>First Supported Platform</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                {activePlatform.name}
-              </p>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                Domain: {activePlatform.domain} • Dynamic attribution configured.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Database & Security</CardTitle>
-                <Badge variant="outline">PostgreSQL</Badge>
-              </div>
-              <CardDescription>Supabase RLS</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                PostgreSQL with Row Level Security policies, protecting student data and resource integrity.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Discovery & Search</CardTitle>
-                <Badge variant="outline">Full-Text</Badge>
-              </div>
-              <CardDescription>PostgreSQL FTS</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                Fast tsvector ranking by title, description, category, and metadata with zero external engine bloat.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">URL Tracking Engine</CardTitle>
-                <Badge variant="brand">Dynamic</Badge>
-              </div>
-              <CardDescription>Contributor Attribution</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                Clean parameter injection for student ambassador tracking without hardcoded values in UI logic.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Telemetry</CardTitle>
-                <Badge variant="outline">PostHog</Badge>
-              </div>
-              <CardDescription>Privacy-First Analytics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                Type-safe client and server events tracking discovery, views, favorites, and referrals.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Asset Delivery</CardTitle>
-                <Badge variant="outline">Cloudflare R2</Badge>
-              </div>
-              <CardDescription>Object Storage</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                High-performance global CDN delivery for resource logos, platform badges, and student media.
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {platforms.map((platform) => {
+            const count = resources.filter((r) => r.platform?.slug === platform.slug).length;
+            return (
+              <Link
+                key={platform.slug}
+                href={`/resources?provider=${platform.slug}`}
+                className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm hover:border-orange-500 hover:shadow-md transition-all dark:border-zinc-800 dark:bg-zinc-900"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-base text-zinc-900 dark:text-zinc-100 group-hover:text-orange-600 transition-colors">
+                    {platform.name}
+                  </span>
+                  <Badge variant="outline" className="text-[10px]">
+                    {count} {count === 1 ? 'Resource' : 'Resources'}
+                  </Badge>
+                </div>
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                  {platform.description || `Official ${platform.name} resources and learning tools.`}
+                </p>
+              </Link>
+            );
+          })}
         </div>
       </section>
+
+      {/* Featured Resources Section */}
+      {featuredResources.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                Featured Resources
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Hand-picked cloud platforms, student benefits, and learning paths.
+              </p>
+            </div>
+            <Link
+              href="/resources"
+              className="text-xs font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 flex items-center gap-1"
+            >
+              View all <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredResources.map((resource) => (
+              <Card
+                key={resource.id}
+                className="flex flex-col hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all"
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-2">
+                    <ResourceLogo
+                      slug={resource.slug}
+                      name={resource.name}
+                      logoUrl={resource.logo_url}
+                      size={40}
+                    />
+                    <Badge variant="outline">{resource.platform?.name ?? 'Microsoft'}</Badge>
+                  </div>
+                  <CardTitle className="mt-3 text-lg font-bold">
+                    {resource.name}
+                  </CardTitle>
+                  <CardDescription className="line-clamp-2 text-xs">
+                    {resource.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto flex items-center justify-between gap-3 pt-0">
+                  <div className="flex flex-wrap gap-1">
+                    {resource.categories.slice(0, 2).map((item) => (
+                      <Badge key={item.id || item.slug} variant="brand" className="text-[10px]">
+                        {item.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  <Link href={`/resources/${resource.slug}`}>
+                    <Button size="sm" variant="outline" className="h-8 text-xs">
+                      View Details
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

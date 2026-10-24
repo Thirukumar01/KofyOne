@@ -1,4 +1,4 @@
-﻿/**
+/**
  * KofyOne - Search Service
  * Modular search layer wrapping PostgreSQL Full-Text Search (tsvector / websearch_to_tsquery).
  * Designed with a clean interface so the underlying engine can be upgraded or swapped
@@ -38,6 +38,22 @@ export class PostgresSearchService implements ISearchService {
         rank: typedRow.rank || 0,
       };
     });
+
+    try {
+      const { getCustomResources } = await import('@/lib/data/custom-resources');
+      const customMatches = getCustomResources().filter((r) => {
+        if (!r.is_published) return false;
+        if (search && !`${r.name} ${r.description}`.toLowerCase().includes(search.toLowerCase())) return false;
+        if (filters?.platformId && r.platform_id !== filters.platformId) return false;
+        return true;
+      });
+      const existingIds = new Set(items.map((i) => i.resource.id));
+      for (const c of customMatches) {
+        if (!existingIds.has(c.id)) {
+          items.unshift({ resource: c, rank: 1 });
+        }
+      }
+    } catch {}
 
     return {
       items,

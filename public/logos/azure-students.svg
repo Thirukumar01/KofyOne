@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="az-stud-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0078D4"/>
+      <stop offset="100%" stop-color="#004578"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="10" fill="url(#az-stud-bg)"/>
+  <!-- Graduation cap -->
+  <path fill="#50E6FF" d="M24 11L7 20l17 9 17-9-17-9z"/>
+  <path fill="#FFFFFF" d="M12 25.5v7c0 3.8 5.4 7 12 7s12-3.2 12-7v-7l-12 6.5-12-6.5z"/>
+  <path fill="#FFD700" d="M38 21.5v9a2 2 0 102 0v-9l-2 0z"/>
+</svg>

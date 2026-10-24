@@ -1,0 +1,52 @@
+[
+  {
+    "id": "custom-1791395999876",
+    "platform_id": "e1e22612-a25a-4345-bc70-9cb179575189",
+    "name": "Microsoft Copilot Studio",
+    "slug": "microsoft-copilot-studio",
+    "description": "Build, deploy, and customize custom Copilots and AI agents with conversational natural language tools.",
+    "official_url": "https://learn.microsoft.com/en-us/copilot/studio",
+    "logo_url": "/uploads/1792808036934-6c1b9471aa507513cb17c7d5.jpg",
+    "featured": true,
+    "is_published": true,
+    "display_order": 0,
+    "tracking_config_id": null,
+    "view_count": 0,
+    "click_count": 0,
+    "metadata": {
+      "tags": []
+    },
+    "created_at": "2026-10-07T17:59:59.876Z",
+    "updated_at": "2026-10-24T02:14:27.503Z",
+    "platform": {
+      "id": "e1e22612-a25a-4345-bc70-9cb179575189",
+      "name": "Microsoft",
+      "slug": "microsoft",
+      "description": "Official Microsoft cloud, developer certifications, Azure, and AI learning resources.",
+      "website_url": "https://learn.microsoft.com",
+      "domain": "microsoft.com",
+      "logo_url": "/logos/microsoft.svg",
+      "is_active": true,
+      "display_order": 1,
+      "created_at": "2026-09-24T00:00:00.000Z",
+      "updated_at": "2026-09-24T00:00:00.000Z"
+    },
+    "tracking_config": null,
+    "categories": [
+      {
+        "id": "cat-ai",
+        "name": "AI",
+        "slug": "ai",
+        "description": "Artificial intelligence learning and generative AI resources.",
+        "icon": null,
+        "display_order": 2,
+        "is_active": true,
+        "created_at": "2026-09-24T00:00:00.000Z",
+        "updated_at": "2026-09-24T00:00:00.000Z"
+      }
+    ],
+    "contributor_id": null,
+    "subcategory": null,
+    "tags": []
+  }
+]

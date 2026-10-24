@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -6,8 +6,18 @@ import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/config/site';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { SignOutButton } from '@/components/auth/sign-out-button';
+import { BrandingLogo } from '@/components/branding/branding-logo';
+import type { UserProfile } from '@/types/user';
+import type { SiteBranding } from '@/types/branding';
 
-export function MobileNav() {
+export function MobileNav({
+  profile,
+  branding,
+}: {
+  profile?: UserProfile | null;
+  branding?: Partial<SiteBranding> | null;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -46,6 +56,9 @@ export function MobileNav() {
           aria-modal="true"
           aria-label="Mobile Navigation Menu"
         >
+          <div className="mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <BrandingLogo branding={branding} />
+          </div>
           <nav className="flex flex-col space-y-4">
             {siteConfig.mainNav.map((item) => {
               const isActive = pathname === item.href;
@@ -58,7 +71,7 @@ export function MobileNav() {
                   className={cn(
                     'text-base font-medium transition-colors',
                     isActive
-                      ? 'font-semibold text-blue-600 dark:text-blue-400'
+                      ? 'font-semibold text-orange-600 dark:text-orange-400'
                       : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
                   )}
                 >
@@ -66,12 +79,57 @@ export function MobileNav() {
                 </Link>
               );
             })}
+
+            {profile && (
+              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-col space-y-2 text-sm">
+                <Link
+                  href="/dashboard"
+                  onClick={close}
+                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/profile"
+                  onClick={close}
+                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600"
+                >
+                  Profile Settings
+                </Link>
+                <Link
+                  href="/settings/security"
+                  onClick={close}
+                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600"
+                >
+                  Security & Account
+                </Link>
+                {profile.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    onClick={close}
+                    className="font-semibold text-orange-600 dark:text-orange-400"
+                  >
+                    Admin Portal
+                  </Link>
+                )}
+              </div>
+            )}
+
             <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2">
-              <Link href="/login" onClick={close}>
-                <Button variant="outline" className="w-full">
-                  Sign In
-                </Button>
-              </Link>
+              {profile ? (
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-xs text-zinc-500 truncate max-w-[200px]">
+                    {profile.email}
+                  </span>
+                  <SignOutButton />
+                </div>
+              ) : (
+                <Link href="/login" onClick={close}>
+                  <Button variant="outline" className="w-full">
+                    Sign In
+                  </Button>
+                </Link>
+              )}
               <Link href="/resources" onClick={close}>
                 <Button variant="primary" className="w-full">
                   Explore Resources

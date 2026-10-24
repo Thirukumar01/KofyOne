@@ -20,7 +20,7 @@ export function MainNav() {
             className={cn(
               'transition-colors hover:text-zinc-900 dark:hover:text-zinc-50',
               isActive
-                ? 'font-semibold text-blue-600 dark:text-blue-400'
+                ? 'font-semibold text-orange-600 dark:text-orange-400'
                 : 'text-zinc-600 dark:text-zinc-400'
             )}
           >

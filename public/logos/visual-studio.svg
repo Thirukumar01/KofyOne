@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="vs-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7B1FA2"/>
+      <stop offset="100%" stop-color="#512BD4"/>
+    </linearGradient>
+    <linearGradient id="vs-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9C27B0"/>
+      <stop offset="100%" stop-color="#673AB7"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="10" fill="#252526"/>
+  <path fill="url(#vs-grad-1)" d="M12 20.5L34 6l5 3v30l-5 3-22-14.5L18 24l-6-3.5z"/>
+  <path fill="url(#vs-grad-2)" d="M34 6l-14 13.5L12 15l22-9z"/>
+  <path fill="#BA68C8" opacity="0.8" d="M34 42l-14-13.5L12 33l22 9z"/>
+  <path fill="#E1BEE7" d="M34 6v36l5-3V9l-5-3z"/>
+</svg>

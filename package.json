@@ -7,28 +7,45 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit -p tsconfig.check.json",
+    "test": "node --test test/auth-security.test.mjs test/secure-auth-system.test.mjs test/admin-cms-branding-providers.test.mjs",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview",
+    "deploy:vinext": "vinext-cloudflare deploy",
+    "deploy:response-store": "cf deploy --prebuilt --mode production --worker kofyone-response-store"
   },
   "dependencies": {
+    "@cloudflare/workers-response-store": "^1.0.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.1",
+    "@vinext/cloudflare": "^1.0.1",
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.48.0",
     "next": "16.3.6",
     "posthog-js": "^1.434.12",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-server-dom-webpack": "^19.2.8",
     "tailwind-merge": "^3.7.0",
+    "vinext": "^1.0.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^2.0.0-beta.sha-52b0dc0e9",
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-rsc": "^0.5.35",
+    "cf": "^1.0.0-beta.12",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "vite": "^8.3.3"
+  },
+  "type": "module"
 }

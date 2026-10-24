@@ -1,4 +1,4 @@
-﻿/**
+/**
  * KofyOne - Site Configuration
  * Central source of truth for site-wide metadata, brand, and navigation hierarchy.
  */
@@ -33,6 +33,7 @@ export const siteConfig = {
     { title: 'Users', href: '/admin/users' },
     { title: 'Analytics', href: '/admin/analytics' },
     { title: 'Audit Logs', href: '/admin/audit-logs' },
+    { title: 'Branding', href: '/admin/branding' },
     { title: 'Settings', href: '/admin/settings' },
   ],
 } as const;

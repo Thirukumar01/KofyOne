@@ -1,4 +1,4 @@
-﻿/**
+/**
  * KofyOne - Centralized Environment Configuration
  * Safe, typed environment access layer.
  *
@@ -58,7 +58,10 @@ export function getServerEnv(): ServerEnv {
   }
 
   return {
-    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    supabaseServiceRoleKey:
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SECRET_KEY ||
+      '',
     cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID,
     r2AccessKeyId: process.env.R2_ACCESS_KEY_ID,
     r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY,

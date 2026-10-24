@@ -16,7 +16,7 @@ export function LoadingState({ message = 'Loading...', className }: LoadingState
         className
       )}
     >
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent dark:border-blue-400 dark:border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-600 border-t-transparent dark:border-orange-400 dark:border-t-transparent" />
       <span className="mt-3 text-sm font-medium">{message}</span>
       <span className="sr-only">Loading content, please wait</span>
     </div>
