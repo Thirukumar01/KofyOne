@@ -138,6 +138,7 @@ When logged into an account, we store:
 
 #### C. Technical & Session Data
 - **Authentication Cookies:** We use secure, HTTP-only session cookies managed by Supabase SSR (\`@supabase/ssr\`) to maintain authenticated sessions without exposing sensitive tokens to browser \`localStorage\`.
+- **Anti-Abuse & Bot Detection Telemetry (Cloudflare Turnstile):** *[Draft Disclosure — Pending Administrator Review]* To protect account access and registration endpoints against automated bots, credential stuffing, and spam, KofyOne employs Cloudflare Turnstile. Turnstile processes non-invasive technical and browser-related telemetry (such as headers, challenge response tokens, and interaction timing) to verify human visitors without tracking cookies or cross-site profiling.
 - **Server Access Logs:** Our web servers log standard HTTP request metadata (such as IP address, request method, user-agent, and status codes) for system maintenance, rate limiting, and DDoS defense.
 
 #### D. What We DO NOT Collect
@@ -161,6 +162,7 @@ We process collected information strictly for the following purposes:
 KofyOne relies on selected technical infrastructure partners to deliver platform functionality:
 
 - **Supabase (Database & Authentication):** Houses the PostgreSQL database and managed authentication services under strict Row Level Security (RLS) policies.
+- **Cloudflare (Turnstile Anti-Abuse Verification):** *[Draft Disclosure — Pending Administrator Review]* Provides privacy-preserving human verification during sign-in and account creation to protect against credential stuffing and automated bots.
 - **Microsoft & Google (Optional OAuth):** If you choose to sign in via Microsoft Entra ID or Google OAuth, your email and name are securely retrieved via standard OAuth 2.0 PKCE flow.
 - **External Resource Providers:** When you click out to an external link (such as Microsoft Learn or AWS Skill Builder), you interact directly with that third-party platform under their independent privacy policies.
 

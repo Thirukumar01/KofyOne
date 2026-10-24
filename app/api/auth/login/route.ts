@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getDynamicClient } from '@/lib/supabase/rpc-helper';
 import { getSafeRedirectUrl } from '@/lib/auth/redirect';
+import { verifyTurnstileToken } from '@/lib/auth/turnstile';
 
 export async function POST(request: Request) {
   try {
@@ -27,6 +28,27 @@ export async function POST(request: Request) {
         : '';
     const password = typeof body.password === 'string' ? body.password : '';
     const nextParam = typeof body.next === 'string' ? body.next : null;
+    const turnstileToken =
+      typeof body.turnstile_token === 'string'
+        ? body.turnstile_token
+        : typeof body.turnstileToken === 'string'
+        ? body.turnstileToken
+        : '';
+
+    // Enforce Turnstile Human Verification Gate before processing credentials
+    const remoteIp =
+      request.headers.get('cf-connecting-ip') ||
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      null;
+
+    const turnstileVerification = await verifyTurnstileToken(turnstileToken, remoteIp, 'login');
+    if (!turnstileVerification.success) {
+      return NextResponse.json(
+        { error: turnstileVerification.error || 'Human verification failed.' },
+        { status: turnstileVerification.errorCode === 'missing-server-secret' ? 500 : 403 }
+      );
+    }
 
     if (!rawIdentifier || !password) {
       return NextResponse.json(

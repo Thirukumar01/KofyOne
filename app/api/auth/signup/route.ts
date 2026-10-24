@@ -16,6 +16,7 @@ import { validatePassword } from '@/lib/auth/password';
 import { validateUsername } from '@/lib/auth/username';
 import { isValidSecurityQuestionId } from '@/lib/auth/security-questions';
 import { hashSecurityAnswer, normalizeSecurityAnswer } from '@/lib/auth/security-answer';
+import { verifyTurnstileToken } from '@/lib/auth/turnstile';
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +27,27 @@ export async function POST(request: Request) {
     const fullName = typeof body.full_name === 'string' ? body.full_name.trim() : '';
     const questionId = typeof body.security_question_id === 'string' ? body.security_question_id : '';
     const answer = typeof body.security_answer === 'string' ? body.security_answer : '';
+    const turnstileToken =
+      typeof body.turnstile_token === 'string'
+        ? body.turnstile_token
+        : typeof body.turnstileToken === 'string'
+        ? body.turnstileToken
+        : '';
+
+    // Enforce Turnstile Human Verification Gate before processing registration
+    const remoteIp =
+      request.headers.get('cf-connecting-ip') ||
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      null;
+
+    const turnstileVerification = await verifyTurnstileToken(turnstileToken, remoteIp, 'signup');
+    if (!turnstileVerification.success) {
+      return NextResponse.json(
+        { error: turnstileVerification.error || 'Human verification failed.' },
+        { status: turnstileVerification.errorCode === 'missing-server-secret' ? 500 : 403 }
+      );
+    }
 
     // 1. Basic Presence Validation
     if (!email || !password) {

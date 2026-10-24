@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OAuthButtons } from '@/components/auth/oauth-buttons';
+import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/auth/turnstile-widget';
 import { validatePassword } from '@/lib/auth/password';
 import { validateUsername } from '@/lib/auth/username';
 import { PREDEFINED_SECURITY_QUESTIONS } from '@/lib/auth/security-questions';
@@ -61,6 +62,10 @@ export function LoginForm() {
   // Sign In Field: Email or Username
   const [loginIdentifier, setLoginIdentifier] = useState('');
 
+  // Cloudflare Turnstile Human Verification
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
+
   // Sign Up Fields
   const [fullName, setFullName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
@@ -105,6 +110,13 @@ export function LoginForm() {
       return;
     }
 
+    const isTurnstileConfigured = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
+    if (isTurnstileConfigured && !turnstileToken) {
+      setStatus('error');
+      setMessage('Please complete the human verification challenge before signing in.');
+      return;
+    }
+
     inFlight.current = true;
     setStatus('loading');
     setMessage('');
@@ -117,6 +129,7 @@ export function LoginForm() {
           identifier,
           password,
           next: searchParams.get('next'),
+          turnstile_token: turnstileToken,
         }),
       });
 
@@ -129,6 +142,9 @@ export function LoginForm() {
     } catch (err) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'Invalid login credentials.');
+      // Reset Turnstile on submission failure so user can obtain a fresh token
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
     } finally {
       inFlight.current = false;
       setStatus((curr) => (curr === 'loading' ? 'idle' : curr));
@@ -174,6 +190,13 @@ export function LoginForm() {
       return;
     }
 
+    const isTurnstileConfigured = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
+    if (isTurnstileConfigured && !turnstileToken) {
+      setStatus('error');
+      setMessage('Please complete the human verification challenge before creating an account.');
+      return;
+    }
+
     inFlight.current = true;
     setStatus('loading');
     setMessage('');
@@ -189,6 +212,7 @@ export function LoginForm() {
           full_name: fullName.trim(),
           security_question_id: securityQuestionId,
           security_answer: cleanAnswer,
+          turnstile_token: turnstileToken,
         }),
       });
 
@@ -209,6 +233,9 @@ export function LoginForm() {
     } catch (err) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'Registration failed.');
+      // Reset Turnstile on failure so user can obtain a fresh token
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
     } finally {
       inFlight.current = false;
       setStatus((curr) => (curr === 'loading' ? 'idle' : curr));
@@ -377,6 +404,8 @@ export function LoginForm() {
             setMode('signin');
             setMessage('');
             setStatus('idle');
+            setTurnstileToken('');
+            turnstileRef.current?.reset();
           }}
           className={`py-1.5 rounded-md transition-all ${
             mode === 'signin'
@@ -392,6 +421,8 @@ export function LoginForm() {
             setMode('signup');
             setMessage('');
             setStatus('idle');
+            setTurnstileToken('');
+            turnstileRef.current?.reset();
           }}
           className={`py-1.5 rounded-md transition-all ${
             mode === 'signup'
@@ -407,6 +438,8 @@ export function LoginForm() {
             setMode('otp');
             setMessage('');
             setStatus('idle');
+            setTurnstileToken('');
+            turnstileRef.current?.reset();
           }}
           className={`py-1.5 rounded-md transition-all ${
             mode === 'otp'
@@ -469,6 +502,22 @@ export function LoginForm() {
               </button>
             </div>
           </div>
+
+          {/* Cloudflare Turnstile Human Verification Widget */}
+          <TurnstileWidget
+            ref={turnstileRef}
+            action="login"
+            onVerify={(token) => {
+              setTurnstileToken(token);
+              if (status === 'error' && message.includes('verification')) {
+                setStatus('idle');
+                setMessage('');
+              }
+            }}
+            onExpire={() => setTurnstileToken('')}
+            onError={() => setTurnstileToken('')}
+            onReset={() => setTurnstileToken('')}
+          />
 
           <Button className="w-full" disabled={isBlocked} aria-busy={status === 'loading'}>
             {status === 'loading' ? 'Signing in…' : 'Sign In'}
@@ -670,6 +719,22 @@ export function LoginForm() {
               </p>
             )}
           </div>
+
+          {/* Cloudflare Turnstile Human Verification Widget */}
+          <TurnstileWidget
+            ref={turnstileRef}
+            action="signup"
+            onVerify={(token) => {
+              setTurnstileToken(token);
+              if (status === 'error' && message.includes('verification')) {
+                setStatus('idle');
+                setMessage('');
+              }
+            }}
+            onExpire={() => setTurnstileToken('')}
+            onError={() => setTurnstileToken('')}
+            onReset={() => setTurnstileToken('')}
+          />
 
           <Button
             className="w-full"
