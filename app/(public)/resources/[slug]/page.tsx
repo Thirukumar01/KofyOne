@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ResourceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const { data: resource, error } = await getPublishedResourceBySlug(slug);
-  if (error) return <div className="mx-auto max-w-3xl px-4 py-16"><ErrorState title="Resource unavailable" message={error.message} /></div>;
+  if (!resource && error) return <div className="mx-auto max-w-3xl px-4 py-16 flex flex-col items-center gap-4"><ErrorState title="Resource unavailable" message={error.message} /><Link href={`/resources/${slug}`}><Button variant="outline" size="sm">Retry</Button></Link></div>;
   if (!resource) notFound();
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">

@@ -31,8 +31,12 @@ export async function getActivePlatforms(): Promise<DataResult<Platform[]>> {
     if (data && data.length > 0) {
       return { data: data as Platform[], error: null };
     }
-    return { data: SEED_PLATFORMS, error: error ? new Error(error.message) : null };
-  } catch {
+    if (error) {
+      console.warn('[DB] getActivePlatforms error, utilizing seed platforms:', error.message);
+    }
+    return { data: SEED_PLATFORMS, error: null };
+  } catch (err) {
+    console.warn('[DB] getActivePlatforms exception, utilizing seed platforms:', err instanceof Error ? err.message : err);
     return { data: SEED_PLATFORMS, error: null };
   }
 }
@@ -49,8 +53,12 @@ export async function getActiveCategories(): Promise<DataResult<Category[]>> {
     if (data && data.length > 0) {
       return { data: data as Category[], error: null };
     }
-    return { data: SEED_CATEGORIES, error: error ? new Error(error.message) : null };
-  } catch {
+    if (error) {
+      console.warn('[DB] getActiveCategories error, utilizing seed categories:', error.message);
+    }
+    return { data: SEED_CATEGORIES, error: null };
+  } catch (err) {
+    console.warn('[DB] getActiveCategories exception, utilizing seed categories:', err instanceof Error ? err.message : err);
     return { data: SEED_CATEGORIES, error: null };
   }
 }
@@ -65,9 +73,14 @@ export async function getTrackingConfig(platformId: string): Promise<DataResult<
       .eq('is_enabled', true)
       .maybeSingle();
 
-    return { data: (data as TrackingConfig | null) ?? null, error: error ? new Error(error.message) : null };
-  } catch (error) {
-    return { data: null, error: error instanceof Error ? error : new Error('Unable to load tracking configuration.') };
+    if (error) {
+      console.warn('[DB] getTrackingConfig warning:', error.message);
+      return { data: null, error: null };
+    }
+    return { data: (data as TrackingConfig | null) ?? null, error: null };
+  } catch (err) {
+    console.warn('[DB] getTrackingConfig exception:', err instanceof Error ? err.message : err);
+    return { data: null, error: null };
   }
 }
 

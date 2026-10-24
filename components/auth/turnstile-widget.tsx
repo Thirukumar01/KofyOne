@@ -44,22 +44,30 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
   ) {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
+    const renderWidgetRef = useRef<(() => void) | null>(null);
     const [status, setStatus] = useState<WidgetStatus>('loading');
     const [statusMessage, setStatusMessage] = useState<string>('');
 
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
 
-    // Reset helper
+    // Reset helper: completely tear down existing widget and recreate if errored
     const handleReset = useCallback(() => {
-      if (typeof window !== 'undefined' && window.turnstile && widgetIdRef.current) {
-        try {
-          window.turnstile.reset(widgetIdRef.current);
-          setStatus('ready');
-          setStatusMessage('');
-          onReset?.();
-        } catch {
-          // If reset throws, recreate widget
+      if (typeof window !== 'undefined' && window.turnstile) {
+        if (widgetIdRef.current) {
+          try {
+            window.turnstile.remove(widgetIdRef.current);
+          } catch {
+            // Safe ignore
+          }
+          widgetIdRef.current = null;
         }
+        setStatus('loading');
+        setStatusMessage('');
+        onReset?.();
+        // Give the DOM a tick to clear before rendering fresh challenge
+        setTimeout(() => {
+          renderWidgetRef.current?.();
+        }, 50);
       }
     }, [onReset]);
 
@@ -107,7 +115,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
             sitekey: siteKey,
             action,
             theme,
-            size: 'flexible',
+            size: 'normal',
             retry: 'auto',
             callback: (token: string) => {
               if (!isMounted) return;
@@ -118,7 +126,15 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
             'error-callback': (errorCode?: string) => {
               if (!isMounted) return;
               setStatus('error');
-              setStatusMessage('Verification could not be completed. Please click Retry.');
+              let message = 'Verification could not be completed. Please click Retry.';
+              if (errorCode === '110200') {
+                message = 'Domain not authorized (110200). Ensure this domain is registered in Cloudflare Turnstile dashboard.';
+              } else if (errorCode?.startsWith('300') || errorCode?.startsWith('600') || errorCode === 'crashed') {
+                message = 'Unable to connect to verification website. If using an AdBlocker, VPN, or Private DNS, please disable it and click Retry.';
+              } else if (errorCode) {
+                message = `Verification error (${errorCode}). If using an AdBlocker or Private DNS, please disable it and click Retry.`;
+              }
+              setStatusMessage(message);
               onError?.(errorCode);
             },
             'expired-callback': () => {
@@ -137,10 +153,12 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           console.warn('[Turnstile] Render error:', renderError);
           if (isMounted) {
             setStatus('error');
-            setStatusMessage('Failed to initialize verification challenge.');
+            setStatusMessage('Failed to initialize verification challenge. Please click Retry.');
           }
         }
       };
+
+      renderWidgetRef.current = renderWidget;
 
       // 2. Load Cloudflare Turnstile script if not present
       const scriptId = 'cf-turnstile-script';
@@ -275,19 +293,21 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
 
         {/* Error State Feedback with Retry Action */}
         {status === 'error' && (
-          <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-            <span className="flex items-center gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5 text-red-600" />
-              <span>{statusMessage || 'Verification failed'}</span>
-            </span>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="flex items-center gap-1 font-semibold text-red-900 hover:underline dark:text-red-100"
-            >
-              <RefreshCw className="h-3 w-3" />
-              Retry
-            </button>
+          <div className="rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+            <div className="flex items-start justify-between gap-2">
+              <span className="flex items-start gap-1.5 leading-relaxed">
+                <AlertCircle className="h-3.5 w-3.5 text-red-600 shrink-0 mt-0.5" />
+                <span>{statusMessage || 'Verification failed'}</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex items-center gap-1 font-semibold text-red-900 hover:underline dark:text-red-100 shrink-0 mt-0.5"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Retry
+              </button>
+            </div>
           </div>
         )}
       </div>

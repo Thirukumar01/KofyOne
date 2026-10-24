@@ -30,7 +30,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
     getActivePlatforms(),
   ]);
 
-  const error = resourceError ?? categoryError;
+  // Graceful degradation: only display full error state if no resources could be loaded (neither from DB nor canonical fallback)
+  const error = resources.length === 0 ? (resourceError ?? categoryError) : null;
 
   // Filter resources: must be strictly published, and match query, provider, category
   const filtered = resources.filter((resource) => {
@@ -194,11 +195,17 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
 
       {/* Results View */}
       {error ? (
-        <ErrorState
-          className="mt-8"
-          title="Resources are unavailable"
-          message={error.message}
-        />
+        <div className="mt-8 flex flex-col items-center gap-4">
+          <ErrorState
+            title="Resources are temporarily unavailable"
+            message={error.message || 'Unable to connect to the database. Please try again shortly.'}
+          />
+          <Link href="/resources">
+            <Button variant="outline" size="sm">
+              Retry Loading Resources
+            </Button>
+          </Link>
+        </div>
       ) : visible.length === 0 ? (
         <EmptyState
           className="mt-8"
