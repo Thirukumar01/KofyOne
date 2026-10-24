@@ -726,7 +726,14 @@ export function LoginForm() {
       )}
 
       <p className="text-center text-xs text-zinc-500">
-        By continuing, you agree to KofyOne&apos;s Terms of Service and Privacy Policy.
+        By continuing, you agree to KofyOne&apos;s{' '}
+        <Link href="/terms" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link href="/privacy" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
+          Privacy Policy
+        </Link>.
       </p>
     </div>
   );

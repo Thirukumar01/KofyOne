@@ -25,9 +25,6 @@ export default async function LoginPage() {
           <Suspense fallback={<p className="text-center text-sm text-zinc-500 py-6">Loading sign-in options…</p>}>
             <LoginForm />
           </Suspense>
-          <p className="mt-5 text-center text-xs text-zinc-400">
-            By continuing, you agree to {branding.app_name}&apos;s Terms of Service and Privacy Policy.
-          </p>
         </CardContent>
       </Card>
     </div>

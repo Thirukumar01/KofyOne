@@ -28,6 +28,8 @@ export const siteConfig = {
     { title: 'Resources', href: '/admin/resources' },
     { title: 'Platforms', href: '/admin/platforms' },
     { title: 'Categories', href: '/admin/categories' },
+    { title: 'Legal & Pages', href: '/admin/legal' },
+    { title: 'Branding', href: '/admin/branding' },
     { title: 'Updates', href: '/admin/updates' },
     { title: 'Events', href: '/admin/events' },
     { title: 'Users', href: '/admin/users' },
