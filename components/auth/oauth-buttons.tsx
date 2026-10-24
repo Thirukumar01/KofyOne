@@ -11,8 +11,15 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { getSafeRedirectUrl } from '@/lib/auth/redirect';
 
-export function OAuthButtons({ disabled = false }: { disabled?: boolean }) {
+export function OAuthButtons({
+  disabled = false,
+  onError,
+}: {
+  disabled?: boolean;
+  onError?: (message: string) => void;
+}) {
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'azure' | null>(null);
+  const [localError, setLocalError] = useState<string>('');
   const searchParams = useSearchParams();
   const nextParam = searchParams.get('next');
   const safeNext = getSafeRedirectUrl(nextParam, '/dashboard');
@@ -20,6 +27,7 @@ export function OAuthButtons({ disabled = false }: { disabled?: boolean }) {
   async function handleOAuth(provider: 'google' | 'azure') {
     if (loadingProvider || disabled) return;
     setLoadingProvider(provider);
+    setLocalError('');
 
     try {
       const origin = window.location.origin;
@@ -38,12 +46,26 @@ export function OAuthButtons({ disabled = false }: { disabled?: boolean }) {
       }
     } catch (err) {
       console.error('OAuth initiation failed:', err);
+      const rawMsg = err instanceof Error ? err.message : 'Unable to connect to authentication provider.';
+      let userFriendlyMsg = rawMsg;
+      if (/not enabled/i.test(rawMsg)) {
+        userFriendlyMsg = `${provider === 'google' ? 'Google' : 'Microsoft'} sign-in is not yet enabled in the Supabase Authentication dashboard.`;
+      } else if (/fetch failed|network|dns/i.test(rawMsg)) {
+        userFriendlyMsg = 'Unable to reach the authentication service. Please check your internet connection or verify the project status.';
+      }
+      setLocalError(userFriendlyMsg);
+      onError?.(userFriendlyMsg);
       setLoadingProvider(null);
     }
   }
 
   return (
     <div className="space-y-2.5">
+      {localError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+          {localError}
+        </div>
+      )}
       {/* Microsoft Entra ID / Microsoft Account */}
       <Button
         type="button"

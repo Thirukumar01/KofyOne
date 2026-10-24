@@ -387,7 +387,13 @@ export function LoginForm() {
   return (
     <div className="space-y-5">
       {/* Social Logins */}
-      <OAuthButtons disabled={isBlocked} />
+      <OAuthButtons
+        disabled={isBlocked}
+        onError={(err) => {
+          setStatus('error');
+          setMessage(err);
+        }}
+      />
 
       <div className="relative flex items-center justify-center py-1">
         <div className="border-t border-zinc-200 dark:border-zinc-800 w-full" />
