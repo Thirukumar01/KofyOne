@@ -1,4 +1,4 @@
-﻿/**
+/**
  * KofyOne - Supabase Browser Client
  * For use in React Client Components.
  */
@@ -16,6 +16,14 @@ export function createClient() {
 
   return createBrowserClient<Database>(
     clientEnv.supabase.url,
-    clientEnv.supabase.anonKey
+    clientEnv.supabase.anonKey,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    }
   );
 }
+

@@ -81,6 +81,10 @@ export async function POST(request: Request) {
         const profileData = profile as { email?: string | null } | null;
         if (profileData?.email) {
           loginEmail = profileData.email.toLowerCase();
+        } else if (rawIdentifier.toLowerCase() === 'admin' && (process.env.ADMIN_EMAIL || '').trim()) {
+          loginEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+        } else {
+          loginEmail = `${rawIdentifier.toLowerCase()}@myapp.local`;
         }
       }
     }

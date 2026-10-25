@@ -21,8 +21,11 @@ import { verifyTurnstileToken } from '@/lib/auth/turnstile';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-    const usernameRaw = typeof body.username === 'string' ? body.username : '';
+    const usernameRaw = typeof body.username === 'string' ? body.username.trim() : '';
+    let email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    if (!email && usernameRaw) {
+      email = `${usernameRaw.toLowerCase()}@myapp.local`;
+    }
     const password = typeof body.password === 'string' ? body.password : '';
     const fullName = typeof body.full_name === 'string' ? body.full_name.trim() : '';
     const questionId = typeof body.security_question_id === 'string' ? body.security_question_id : '';

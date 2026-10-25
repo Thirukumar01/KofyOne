@@ -110,7 +110,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       const { data: profileRow } = await (supabase.from('profiles') as unknown as {
         select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
       })
-        .select('role, full_name, display_name, avatar_url, preferred_platform')
+        .select('role, full_name, display_name, avatar_url, preferred_platform, username')
         .eq('id', user.id)
         .maybeSingle();
       const profileData = profileRow as {
@@ -119,6 +119,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
         display_name?: string | null;
         avatar_url?: string | null;
         preferred_platform?: string | null;
+        username?: string | null;
       } | null;
 
       if (profileData) {
@@ -128,10 +129,12 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
         fullName = profileData.full_name || profileData.display_name || fullName;
         avatarUrl = profileData.avatar_url ?? avatarUrl;
         preferredPlatform = profileData.preferred_platform ?? preferredPlatform;
+        username = profileData.username || (user.user_metadata?.username as string) || null;
       } else {
         // Profile fallback from user metadata (e.g., OAuth display name)
         fullName = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null;
         avatarUrl = (user.user_metadata?.avatar_url as string) || null;
+        username = (user.user_metadata?.username as string) || null;
       }
     } catch {
       // Safe fallback

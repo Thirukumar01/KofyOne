@@ -1,815 +1,577 @@
 'use client';
 
+/**
+ * KofyOne - Streamlined Username & Password / PIN Authentication
+ *
+ * Implements:
+ * - Simple Username and Password/PIN credentials flow (zero email required from user).
+ * - Internal dummy email formatting (`${username.toLowerCase().trim()}@myapp.local`).
+ * - Single unified "Enter App" button:
+ *     1. Attempts `signInWithPassword` first.
+ *     2. On invalid credentials, checks for new user via 1-click Sign Up / auto-register.
+ *     3. Immediately logs user in without waiting for email confirmation.
+ * - Persistent sessions: automatically preserves and resumes existing sessions.
+ */
+
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Check, HelpCircle } from 'lucide-react';
+import {
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  ArrowRight,
+  ShieldCheck,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/auth/turnstile-widget';
-import { validatePassword } from '@/lib/auth/password';
-import { validateUsername } from '@/lib/auth/username';
-import { PREDEFINED_SECURITY_QUESTIONS } from '@/lib/auth/security-questions';
 
-const RESEND_COOLDOWN_SECONDS = 60;
-const EMAIL_QUOTA_COOLDOWN_SECONDS = 90;
-
-type AuthMode = 'signin' | 'signup' | 'otp';
-type AuthStep = 'request' | 'verify';
+type AuthMode = 'signin' | 'signup';
 type AuthStatus = 'idle' | 'loading' | 'error' | 'success';
 
-function authErrorMessage(error: unknown) {
-  const authError = error as { status?: number; code?: string; message?: string };
-  const code = authError.code ?? '';
-  const message = authError.message ?? '';
-
-  if (code === 'email_provider_disabled' || /email logins are disabled/i.test(message)) {
-    return 'Email logins are disabled in your Supabase project. Enable Email provider under Authentication → Providers.';
+/**
+ * Converts a username into internal dummy email format.
+ * If an email was already entered (e.g. admin email), keeps it as is.
+ */
+function toDummyEmail(username: string): string {
+  const clean = username.toLowerCase().trim();
+  if (clean.includes('@')) {
+    return clean;
   }
-  if (authError.status === 429 || /rate limit|too many requests/i.test(message)) {
-    return 'Rate limit reached. Please wait a minute or try signing in with Google or Microsoft.';
-  }
-  if (code === 'otp_expired') return 'This verification code has expired. Please request a new one.';
-  if (/token|otp/i.test(code) || /token|otp/i.test(message)) return 'Incorrect verification code. Please check and try again.';
-  if (code === 'user_already_exists' || /already registered/i.test(message)) {
-    return 'An account with this email already exists. Please sign in instead.';
-  }
-  if (/invalid login credentials/i.test(message)) {
-    return 'Invalid email/username or password. Please verify and try again.';
-  }
-  if (/network|fetch|failed to fetch/i.test(message)) {
-    return 'Unable to connect right now. Please check your internet connection.';
-  }
-  return message || 'An unexpected error occurred. Please try again.';
-}
-
-function formatCooldown(seconds: number) {
-  return seconds > 60 ? `${Math.ceil(seconds / 60)}m` : `${seconds}s`;
+  return `${clean}@myapp.local`;
 }
 
 export function LoginForm() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get('error');
+  const nextTarget = searchParams.get('next') || '/dashboard';
   const inFlight = useRef(false);
 
   const [mode, setMode] = useState<AuthMode>('signin');
-  const [step, setStep] = useState<AuthStep>('request');
   const [status, setStatus] = useState<AuthStatus>(errorParam ? 'error' : 'idle');
-  const [message, setMessage] = useState(errorParam ? decodeURIComponent(errorParam) : '');
+  const [message, setMessage] = useState<string>(
+    errorParam ? decodeURIComponent(errorParam) : ''
+  );
+  const [suggestSignUp, setSuggestSignUp] = useState(false);
 
-  // Sign In Field: Email or Username
-  const [loginIdentifier, setLoginIdentifier] = useState('');
+  // Form Fields: Username and Password/PIN
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Cloudflare Turnstile Human Verification
+  // Cloudflare Turnstile Human Verification (if enabled in env)
   const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
 
-  // Sign Up Fields
-  const [fullName, setFullName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [securityQuestionId, setSecurityQuestionId] = useState(PREDEFINED_SECURITY_QUESTIONS[0].id);
-  const [securityAnswer, setSecurityAnswer] = useState('');
-  const [showSecurityAnswer, setShowSecurityAnswer] = useState(false);
-
-  // Common Fields
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-
-  // Cooldown timers for email OTP
-  const [resendSeconds, setResendSeconds] = useState(0);
-  const [quotaSeconds, setQuotaSeconds] = useState(0);
-
+  // Check for existing persistent session on mount
   useEffect(() => {
-    if (resendSeconds <= 0 && quotaSeconds <= 0) return;
-    const timer = window.setInterval(() => {
-      setResendSeconds((seconds) => Math.max(0, seconds - 1));
-      setQuotaSeconds((seconds) => Math.max(0, seconds - 1));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [resendSeconds, quotaSeconds]);
-
-  const passwordStrength = validatePassword(password);
-  const usernameCheck = validateUsername(username);
-  const passwordsMatch = mode !== 'signup' || (password.length > 0 && password === confirmPassword);
-  const isBlocked = status === 'loading' || quotaSeconds > 0;
-
-  // 1. Sign In (Email or Username + Password)
-  async function handlePasswordLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (inFlight.current || isBlocked) return;
-
-    const identifier = loginIdentifier.trim();
-    if (!identifier || !password) {
-      setStatus('error');
-      setMessage('Please enter your email address or username and password.');
-      return;
-    }
-
-    const isTurnstileConfigured = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
-    if (isTurnstileConfigured && !turnstileToken) {
-      setStatus('error');
-      setMessage('Please complete the human verification challenge before signing in.');
-      return;
-    }
-
-    inFlight.current = true;
-    setStatus('loading');
-    setMessage('');
-
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier,
-          password,
-          next: searchParams.get('next'),
-          turnstile_token: turnstileToken,
-        }),
+      const supabase = createClient();
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        if (!error && session) {
+          setStatus('success');
+          setMessage('Welcome back! Resuming your session...');
+          window.location.assign(nextTarget);
+        }
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Invalid credentials.');
-      }
-
-      window.location.assign(data.redirectTo || '/dashboard');
-    } catch (err) {
-      setStatus('error');
-      setMessage(err instanceof Error ? err.message : 'Invalid login credentials.');
-      // Reset Turnstile on submission failure so user can obtain a fresh token
-      setTurnstileToken('');
-      turnstileRef.current?.reset();
-    } finally {
-      inFlight.current = false;
-      setStatus((curr) => (curr === 'loading' ? 'idle' : curr));
+    } catch {
+      // Ignore if client is initializing
     }
-  }
+  }, [nextTarget]);
 
-  // 2. User Registration (Email, Unique Username, Password, Predefined Question & Answer)
-  async function handleSignUp(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (inFlight.current || isBlocked) return;
+  // Unified "Enter App" Submit Handler
+  async function handleEnterApp(e?: FormEvent, targetMode?: AuthMode) {
+    if (e) e.preventDefault();
+    if (inFlight.current || status === 'loading') return;
 
-    const normalizedEmail = signupEmail.trim().toLowerCase();
     const cleanUsername = username.trim().toLowerCase();
-    const cleanAnswer = securityAnswer.trim();
+    const rawPassword = password;
+    const currentMode = targetMode || mode;
 
-    if (!normalizedEmail || !cleanUsername || !password || !cleanAnswer) {
+    if (!cleanUsername) {
       setStatus('error');
-      setMessage('Please fill in all required fields.');
+      setMessage('Please enter your username.');
       return;
     }
 
-    if (!usernameCheck.isValid) {
+    if (cleanUsername.length < 2) {
       setStatus('error');
-      setMessage(usernameCheck.error || 'Invalid username format.');
+      setMessage('Username must be at least 2 characters.');
       return;
     }
 
-    if (passwordStrength.errors.length > 0) {
+    if (!rawPassword) {
       setStatus('error');
-      setMessage(passwordStrength.errors[0]);
+      setMessage('Please enter your password or PIN.');
       return;
     }
 
-    if (!passwordsMatch) {
+    if (rawPassword.length < 3) {
       setStatus('error');
-      setMessage('Passwords do not match.');
+      setMessage('Password or PIN must be at least 3 characters.');
       return;
     }
 
-    if (cleanAnswer.length < 2) {
-      setStatus('error');
-      setMessage('Security answer must be at least 2 characters.');
-      return;
-    }
-
-    const isTurnstileConfigured = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
+    const isTurnstileConfigured = Boolean(
+      process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
+    );
     if (isTurnstileConfigured && !turnstileToken) {
       setStatus('error');
-      setMessage('Please complete the human verification challenge before creating an account.');
+      setMessage('Please complete the human verification check below.');
       return;
     }
 
     inFlight.current = true;
     setStatus('loading');
     setMessage('');
+    setSuggestSignUp(false);
+
+    const supabase = createClient();
+    const dummyEmail = toDummyEmail(cleanUsername);
 
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: normalizedEmail,
-          username: cleanUsername,
-          password,
-          full_name: fullName.trim(),
-          security_question_id: securityQuestionId,
-          security_answer: cleanAnswer,
-          turnstile_token: turnstileToken,
-        }),
-      });
+      // ----------------------------------------------------------------------
+      // Explicit Sign Up Tab Flow
+      // ----------------------------------------------------------------------
+      if (currentMode === 'signup') {
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: dummyEmail,
+          password: rawPassword,
+          options: {
+            data: {
+              username: cleanUsername,
+              full_name: cleanUsername,
+            },
+          },
+        });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to create account.');
-      }
+        if (signUpError) {
+          const errMsg = signUpError.message || '';
+          if (/already registered|user_already_exists|email exists/i.test(errMsg)) {
+            setStatus('error');
+            setMessage(
+              `Username '@${cleanUsername}' already exists. Switch to Sign In to enter.`
+            );
+            return;
+          }
+          if (/confirmation email/i.test(errMsg)) {
+            setStatus('error');
+            setMessage(
+              `To enable instant dummy-email logins, disable 'Confirm email' under Supabase Dashboard → Authentication → Providers → Email.`
+            );
+            return;
+          }
+          throw new Error(errMsg);
+        }
 
-      setStatus('success');
-      setMessage(data.message || 'Account created successfully!');
+        // Immediate session active
+        if (signUpData?.session) {
+          setStatus('success');
+          setMessage(`Account created for @${cleanUsername}! Entering app...`);
+          setTimeout(() => {
+            window.location.assign(nextTarget);
+          }, 600);
+          return;
+        }
 
-      if (!data.requiresEmailVerification) {
-        // Immediate login succeeded
+        // Try immediate signInWithPassword if session wasn't returned in signUp body
+        const { data: signInAfter, error: signInAfterErr } =
+          await supabase.auth.signInWithPassword({
+            email: dummyEmail,
+            password: rawPassword,
+          });
+
+        if (signInAfter?.session) {
+          setStatus('success');
+          setMessage(`Welcome, @${cleanUsername}! Entering app...`);
+          setTimeout(() => {
+            window.location.assign(nextTarget);
+          }, 600);
+          return;
+        }
+
+        if (signInAfterErr && /email not confirmed/i.test(signInAfterErr.message)) {
+          setStatus('error');
+          setMessage(
+            `Account created! Note: Please disable 'Confirm email' in Supabase Dashboard → Authentication → Providers → Email for instant dummy-email logins.`
+          );
+          return;
+        }
+
+        setStatus('success');
+        setMessage(`Account created! Entering app...`);
         setTimeout(() => {
-          window.location.assign('/dashboard');
-        }, 1500);
+          window.location.assign(nextTarget);
+        }, 600);
+        return;
       }
-    } catch (err) {
+
+      // ----------------------------------------------------------------------
+      // Unified "Enter App" Flow (Sign In first -> Auto-Register if new)
+      // ----------------------------------------------------------------------
+      let { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email: dummyEmail,
+          password: rawPassword,
+        });
+
+      // Special fallback: Check admin email if username is 'admin' or matches configured admin
+      if (
+        signInError &&
+        (cleanUsername === 'admin' || cleanUsername.includes('admin'))
+      ) {
+        const adminFallbackEmail = 'tthirukumar847@gmail.com';
+        const adminRes = await supabase.auth.signInWithPassword({
+          email: adminFallbackEmail,
+          password: rawPassword,
+        });
+        if (adminRes.data?.session) {
+          signInData = adminRes.data;
+          signInError = null;
+        }
+      }
+
+      // 1. Success on signInWithPassword
+      if (!signInError && signInData?.session) {
+        setStatus('success');
+        setMessage(`Signed in successfully! Entering app...`);
+        setTimeout(() => {
+          window.location.assign(nextTarget);
+        }, 500);
+        return;
+      }
+
+      // 2. If signInWithPassword returns invalid credentials error:
+      const isInvalidCredentials = Boolean(
+        signInError?.message &&
+          (/invalid login credentials|invalid credentials/i.test(signInError.message) ||
+            signInError.status === 400)
+      );
+
+      if (isInvalidCredentials) {
+        // Try auto-registering the user immediately with the entered credentials
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: dummyEmail,
+          password: rawPassword,
+          options: {
+            data: {
+              username: cleanUsername,
+              full_name: cleanUsername,
+            },
+          },
+        });
+
+        // 2a. If auto-registration succeeds with an active session:
+        if (signUpData?.session) {
+          setStatus('success');
+          setMessage(`New account created for @${cleanUsername}! Entering app...`);
+          setTimeout(() => {
+            window.location.assign(nextTarget);
+          }, 600);
+          return;
+        }
+
+        // 2b. If user is already registered in auth, credentials were simply wrong:
+        const alreadyExists =
+          Boolean(
+            signUpError &&
+              /already registered|user_already_exists|email exists/i.test(
+                signUpError.message
+              )
+          ) ||
+          Boolean(
+            signUpData?.user &&
+              (!signUpData.user.identities || signUpData.user.identities.length === 0)
+          );
+
+        if (alreadyExists) {
+          setStatus('error');
+          setMessage(
+            `Incorrect password or PIN for username '@${cleanUsername}'. Please try again.`
+          );
+          setSuggestSignUp(false);
+          return;
+        }
+
+        // 2c. If user was created but no session immediately returned:
+        if (signUpData?.user && !signUpData?.session) {
+          // Attempt immediate sign in
+          const { data: retrySignIn } = await supabase.auth.signInWithPassword({
+            email: dummyEmail,
+            password: rawPassword,
+          });
+
+          if (retrySignIn?.session) {
+            setStatus('success');
+            setMessage(`Account created for @${cleanUsername}! Entering app...`);
+            setTimeout(() => {
+              window.location.assign(nextTarget);
+            }, 600);
+            return;
+          }
+
+          setStatus('error');
+          setMessage(
+            `Account created! If login does not complete, please disable 'Confirm email' under Supabase Dashboard → Authentication → Providers → Email.`
+          );
+          return;
+        }
+
+        if (signUpError && /confirmation email/i.test(signUpError.message)) {
+          setStatus('error');
+          setMessage(
+            `Account registration notice: Please turn off 'Confirm email' in Supabase Dashboard → Authentication → Providers → Email for instant logins.`
+          );
+          setSuggestSignUp(true);
+          return;
+        }
+
+        // Fallback: Provide clean 1-click Sign Up prompt
+        setStatus('error');
+        setMessage(
+          `No account found for '@${cleanUsername}', or invalid credentials.`
+        );
+        setSuggestSignUp(true);
+        return;
+      }
+
+      // Any other auth error
       setStatus('error');
-      setMessage(err instanceof Error ? err.message : 'Registration failed.');
-      // Reset Turnstile on failure so user can obtain a fresh token
+      setMessage(signInError?.message || 'Unable to sign in. Please try again.');
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
+    } catch (err: unknown) {
+      setStatus('error');
+      setMessage(
+        err instanceof Error ? err.message : 'An error occurred during authentication.'
+      );
       setTurnstileToken('');
       turnstileRef.current?.reset();
     } finally {
       inFlight.current = false;
-      setStatus((curr) => (curr === 'loading' ? 'idle' : curr));
-    }
-  }
-
-  // 3. Email Link / Code (OTP)
-  async function sendOtp(event?: FormEvent<HTMLFormElement>) {
-    event?.preventDefault();
-    if (inFlight.current || isBlocked || resendSeconds > 0) return;
-    const normalizedEmail = (mode === 'signin' ? loginIdentifier : signupEmail).trim().toLowerCase();
-    if (!normalizedEmail || !normalizedEmail.includes('@')) {
-      setStatus('error');
-      setMessage('Enter a valid email address to continue.');
-      return;
-    }
-
-    inFlight.current = true;
-    setStatus('loading');
-    setMessage('');
-
-    const next = searchParams.get('next');
-    const redirectUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next || '/dashboard')}`
-        : undefined;
-
-    try {
-      const { error } = await createClient().auth.signInWithOtp({
-        email: normalizedEmail,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: redirectUrl,
-        },
-      });
-      if (error) throw error;
-      setSignupEmail(normalizedEmail);
-      setStep('verify');
-      setResendSeconds(RESEND_COOLDOWN_SECONDS);
-      setMessage('Verification link sent! Check your inbox, or enter the 6-digit code below.');
-    } catch (error) {
-      const authError = error as { status?: number; message?: string };
-      if (authError.status === 429 || /rate limit|too many requests/i.test(authError.message ?? '')) {
-        setQuotaSeconds(EMAIL_QUOTA_COOLDOWN_SECONDS);
-      }
-      setStatus('error');
-      setMessage(authErrorMessage(error));
-    } finally {
-      inFlight.current = false;
       setStatus((current) => (current === 'loading' ? 'idle' : current));
     }
-  }
-
-  async function verifyOtp(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (inFlight.current || isBlocked) return;
-    const token = otp.replace(/\s/g, '');
-    if (!/^\d{6}$/.test(token)) {
-      setStatus('error');
-      setMessage('Enter the six-digit verification code from your email.');
-      return;
-    }
-
-    inFlight.current = true;
-    setStatus('loading');
-    setMessage('');
-
-    try {
-      const { error } = await createClient().auth.verifyOtp({ email: signupEmail, token, type: 'email' });
-      if (error) throw error;
-      const next = searchParams.get('next');
-      window.location.assign(next?.startsWith('/') && !next.startsWith('//') ? next : '/dashboard');
-    } catch (error) {
-      setStatus('error');
-      setMessage(authErrorMessage(error));
-    } finally {
-      inFlight.current = false;
-      setStatus((current) => (current === 'loading' ? 'idle' : current));
-    }
-  }
-
-  // OTP Verification View
-  if (mode === 'otp' && step === 'verify') {
-    return (
-      <form onSubmit={verifyOtp} className="space-y-4">
-        <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 text-center dark:border-blue-900/50 dark:bg-blue-950/20">
-          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Check your inbox</p>
-          <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
-            Click the link sent to <span className="font-semibold">{signupEmail}</span> or enter the code.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="otp" className="text-sm font-medium">Six-digit code</label>
-          <Input
-            id="otp"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            value={otp}
-            disabled={isBlocked}
-            onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
-            placeholder="123456"
-          />
-        </div>
-
-        <Button className="w-full" disabled={isBlocked || otp.length < 6} aria-busy={status === 'loading'}>
-          {status === 'loading' ? 'Verifying…' : 'Verify and Sign In'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          disabled={isBlocked || resendSeconds > 0}
-          onClick={() => void sendOtp()}
-        >
-          {resendSeconds > 0 ? `Resend code in ${formatCooldown(resendSeconds)}` : 'Resend code'}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full"
-          disabled={isBlocked}
-          onClick={() => {
-            setStep('request');
-            setOtp('');
-            setMessage('');
-          }}
-        >
-          Use a different email
-        </Button>
-
-        {message && (
-          <p
-            role={status === 'error' ? 'alert' : 'status'}
-            className={
-              status === 'error'
-                ? 'rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200'
-                : 'rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200'
-            }
-          >
-            {message}
-          </p>
-        )}
-      </form>
-    );
   }
 
   return (
     <div className="space-y-5">
-      {/* Mode Selector Tabs */}
-      <div className="grid grid-cols-3 p-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-lg text-xs font-medium">
+      {/* 1-Click Clean Mode Switcher Tabs */}
+      <div className="grid grid-cols-2 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60">
         <button
           type="button"
           onClick={() => {
             setMode('signin');
             setMessage('');
             setStatus('idle');
-            setTurnstileToken('');
+            setSuggestSignUp(false);
           }}
-          className={`py-1.5 rounded-md transition-all ${
+          className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs sm:text-sm font-semibold transition-all duration-150 ${
             mode === 'signin'
-              ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm font-semibold'
-              : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-900 dark:text-zinc-50'
+              : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
           }`}
         >
-          Sign In
+          <LogIn className="h-3.5 w-3.5" />
+          <span>Sign In</span>
         </button>
+
         <button
           type="button"
           onClick={() => {
             setMode('signup');
             setMessage('');
             setStatus('idle');
-            setTurnstileToken('');
+            setSuggestSignUp(false);
           }}
-          className={`py-1.5 rounded-md transition-all ${
+          className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs sm:text-sm font-semibold transition-all duration-150 ${
             mode === 'signup'
-              ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm font-semibold'
-              : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+              ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-900 dark:text-zinc-50'
+              : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
           }`}
         >
-          Create Account
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setMode('otp');
-            setMessage('');
-            setStatus('idle');
-            setTurnstileToken('');
-          }}
-          className={`py-1.5 rounded-md transition-all ${
-            mode === 'otp'
-              ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm font-semibold'
-              : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-          }`}
-        >
-          Magic Link
+          <UserPlus className="h-3.5 w-3.5" />
+          <span>Sign Up</span>
         </button>
       </div>
 
-      {/* Mode 1: Sign In (Email or Username + Password) */}
-      {mode === 'signin' && (
-        <form onSubmit={handlePasswordLogin} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="login-identifier" className="text-sm font-medium">
-              Email address or Username
-            </label>
-            <Input
-              id="login-identifier"
-              type="text"
-              required
-              autoComplete="username"
-              disabled={isBlocked}
-              value={loginIdentifier}
-              onChange={(e) => setLoginIdentifier(e.target.value)}
-              placeholder="you@example.com or your_username"
-            />
-          </div>
+      {/* Status & Feedback Messages */}
+      {status === 'error' && message && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs sm:text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+            <div className="flex-1 space-y-2">
+              <p className="leading-snug">{message}</p>
 
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label htmlFor="password" className="text-sm font-medium">Password</label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-orange-600 hover:text-orange-700 dark:text-orange-400 font-medium hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                autoComplete="current-password"
-                disabled={isBlocked}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              {/* Clean 1-Click Sign Up action if invalid credentials for new user */}
+              {suggestSignUp && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('signup');
+                      handleEnterApp(undefined, 'signup');
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700 transition-colors"
+                  >
+                    <UserPlus className="h-3 w-3" />
+                    <span>Create account as &quot;{username.trim()}&quot; &amp; Enter</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Cloudflare Turnstile Human Verification Widget */}
-          <TurnstileWidget
-            ref={turnstileRef}
-            action="login"
-            onVerify={(token) => {
-              setTurnstileToken(token);
-              setStatus((curr) => {
-                if (curr === 'error') {
-                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
-                  return 'idle';
-                }
-                return curr;
-              });
-            }}
-            onExpire={() => setTurnstileToken('')}
-            onError={() => setTurnstileToken('')}
-            onReset={() => {
-              setTurnstileToken('');
-              setStatus((curr) => {
-                if (curr === 'error') {
-                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
-                  return 'idle';
-                }
-                return curr;
-              });
-            }}
-          />
-
-          <Button className="w-full" disabled={isBlocked} aria-busy={status === 'loading'}>
-            {status === 'loading' ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </form>
+        </div>
       )}
 
-      {/* Mode 2: Sign Up (Registration with Unique Username and Security Question) */}
-      {mode === 'signup' && (
-        <form onSubmit={handleSignUp} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="full-name" className="text-sm font-medium">Full Name (optional)</label>
-            <Input
-              id="full-name"
-              type="text"
-              autoComplete="name"
-              disabled={isBlocked}
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Alex Johnson"
-            />
+      {status === 'success' && message && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs sm:text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <p className="font-medium leading-snug">{message}</p>
           </div>
+        </div>
+      )}
 
-          {/* Email */}
-          <div className="space-y-2">
-            <label htmlFor="signup-email" className="text-sm font-medium">Email address</label>
-            <Input
-              id="signup-email"
-              type="email"
-              required
-              autoComplete="email"
-              inputMode="email"
-              disabled={isBlocked}
-              value={signupEmail}
-              onChange={(e) => setSignupEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </div>
-
-          {/* Unique Username */}
-          <div className="space-y-2">
-            <label htmlFor="signup-username" className="text-sm font-medium">
-              Username
-            </label>
-            <Input
-              id="signup-username"
-              type="text"
-              required
-              autoComplete="username"
-              disabled={isBlocked}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="alex_johnson"
-            />
-            {username.length > 0 && !usernameCheck.isValid && (
-              <p className="text-[11px] text-red-500">
-                • {usernameCheck.error}
-              </p>
-            )}
-            {username.length >= 3 && usernameCheck.isValid && (
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <Check className="h-3 w-3" /> Valid username format
-              </p>
-            )}
-          </div>
-
-          {/* Security Question Selection */}
-          <div className="space-y-2">
-            <label htmlFor="security-question" className="text-sm font-medium flex items-center gap-1.5">
-              <HelpCircle className="h-3.5 w-3.5 text-orange-500" />
-              Security Question (for self-service recovery)
-            </label>
-            <select
-              id="security-question"
-              required
-              disabled={isBlocked}
-              value={securityQuestionId}
-              onChange={(e) => setSecurityQuestionId(e.target.value)}
-              className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
-            >
-              {PREDEFINED_SECURITY_QUESTIONS.map((q) => (
-                <option key={q.id} value={q.id}>
-                  {q.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Security Answer (Masked by default) */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label htmlFor="security-answer" className="text-sm font-medium">
-                Security Answer
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowSecurityAnswer(!showSecurityAnswer)}
-                className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex items-center gap-1"
-              >
-                {showSecurityAnswer ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                {showSecurityAnswer ? 'Hide' : 'Show'}
-              </button>
-            </div>
-            <Input
-              id="security-answer"
-              type={showSecurityAnswer ? 'text' : 'password'}
-              required
-              autoComplete="off"
-              disabled={isBlocked}
-              value={securityAnswer}
-              onChange={(e) => setSecurityAnswer(e.target.value)}
-              placeholder="Your private answer"
-            />
-            <p className="text-[11px] text-zinc-500">
-              Answers are securely hashed with bcrypt. Never shared or stored in plaintext.
-            </p>
-          </div>
-
-          {/* Password */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label htmlFor="signup-password" className="text-sm font-medium">Password</label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex items-center gap-1"
-              >
-                {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
-            </div>
-            <Input
-              id="signup-password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              autoComplete="new-password"
-              disabled={isBlocked}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
-            />
-
-            {/* Real-time Strength Meter */}
-            {password.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-500">Strength:</span>
-                  <span className={`font-semibold ${passwordStrength.color.split(' ')[0]}`}>
-                    {passwordStrength.label}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-1 h-1.5">
-                  {[1, 2, 3, 4].map((step) => (
-                    <div
-                      key={step}
-                      className={`rounded-full transition-colors ${
-                        passwordStrength.score >= step
-                          ? passwordStrength.color.split(' ')[1]
-                          : 'bg-zinc-200 dark:bg-zinc-800'
-                      }`}
-                    />
-                  ))}
-                </div>
-                {passwordStrength.errors.length > 0 && (
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    • {passwordStrength.errors[0]}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div className="space-y-2">
-            <label htmlFor="confirm-password" className="text-sm font-medium">Confirm Password</label>
-            <Input
-              id="confirm-password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              autoComplete="new-password"
-              disabled={isBlocked}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repeat your password"
-            />
-            {confirmPassword.length > 0 && (
-              <p
-                className={`text-[11px] flex items-center gap-1 ${
-                  passwordsMatch ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
-                }`}
-              >
-                {passwordsMatch ? (
-                  <>
-                    <Check className="h-3 w-3" /> Passwords match
-                  </>
-                ) : (
-                  'Passwords do not match'
-                )}
-              </p>
-            )}
-          </div>
-
-          {/* Cloudflare Turnstile Human Verification Widget */}
-          <TurnstileWidget
-            ref={turnstileRef}
-            action="signup"
-            onVerify={(token) => {
-              setTurnstileToken(token);
-              setStatus((curr) => {
-                if (curr === 'error') {
-                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
-                  return 'idle';
-                }
-                return curr;
-              });
-            }}
-            onExpire={() => setTurnstileToken('')}
-            onError={() => setTurnstileToken('')}
-            onReset={() => {
-              setTurnstileToken('');
-              setStatus((curr) => {
-                if (curr === 'error') {
-                  setMessage((msg) => (msg.toLowerCase().includes('verification') ? '' : msg));
-                  return 'idle';
-                }
-                return curr;
-              });
-            }}
-          />
-
-          <Button
-            className="w-full"
-            disabled={
-              isBlocked ||
-              !usernameCheck.isValid ||
-              passwordStrength.errors.length > 0 ||
-              !passwordsMatch ||
-              securityAnswer.trim().length < 2
-            }
-            aria-busy={status === 'loading'}
+      {/* Main Form */}
+      <form onSubmit={(e) => handleEnterApp(e)} className="space-y-4">
+        {/* Username Field */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="username-input"
+            className="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400"
           >
-            {status === 'loading' ? 'Creating account…' : 'Create Account'}
-          </Button>
-        </form>
-      )}
-
-      {/* Mode 3: Magic Link */}
-      {mode === 'otp' && step === 'request' && (
-        <form onSubmit={sendOtp} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="otp-email" className="text-sm font-medium">Email address</label>
+            Username
+          </label>
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-400 dark:text-zinc-500">
+              <User className="h-4 w-4" />
+            </div>
             <Input
-              id="otp-email"
-              type="email"
+              id="username-input"
+              name="username"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
               required
-              autoComplete="email"
-              inputMode="email"
-              disabled={isBlocked}
-              value={signupEmail}
-              onChange={(e) => setSignupEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="e.g. alex or student01"
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (status === 'error') setStatus('idle');
+              }}
+              className="pl-10 h-11 text-sm bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100"
+              disabled={status === 'loading'}
             />
           </div>
+          <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
+            No email address needed. Use your username to enter.
+          </p>
+        </div>
 
-          <Button className="w-full" disabled={isBlocked || !signupEmail.trim()} aria-busy={status === 'loading'}>
-            {status === 'loading' ? 'Sending link…' : 'Send Magic Link / OTP'}
+        {/* Password / PIN Field */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="password-input"
+              className="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400"
+            >
+              Password / PIN
+            </label>
+            <span className="text-[11px] text-zinc-400">Min 3 characters</span>
+          </div>
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-400 dark:text-zinc-500">
+              <Lock className="h-4 w-4" />
+            </div>
+            <Input
+              id="password-input"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              required
+              placeholder="Enter password or numeric PIN"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (status === 'error') setStatus('idle');
+              }}
+              className="pl-10 pr-10 h-11 text-sm bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100 font-mono tracking-tight"
+              disabled={status === 'loading'}
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Cloudflare Turnstile Human Verification (if enabled) */}
+        {Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()) && (
+          <div className="pt-1 flex justify-center">
+            <TurnstileWidget
+              ref={turnstileRef}
+              action={mode === 'signup' ? 'signup' : 'login'}
+              onVerify={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken('')}
+              onError={() => setTurnstileToken('')}
+            />
+          </div>
+        )}
+
+        {/* Unified "Enter App" Primary Action Button */}
+        <div className="pt-2">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={status === 'loading'}
+            className="w-full h-11 text-sm sm:text-base font-semibold shadow-md transition-all duration-150 hover:opacity-95 active:scale-[0.99] flex items-center justify-center gap-2"
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>
+                  {mode === 'signup' ? 'Creating account…' : 'Entering App…'}
+                </span>
+              </>
+            ) : mode === 'signup' ? (
+              <>
+                <UserPlus className="h-4 w-4" />
+                <span>Create Account &amp; Enter</span>
+              </>
+            ) : (
+              <>
+                <LogIn className="h-4 w-4" />
+                <span>Enter App</span>
+                <ArrowRight className="h-4 w-4 ml-0.5 opacity-80" />
+              </>
+            )}
           </Button>
-        </form>
-      )}
+        </div>
 
-      {/* Status Messages */}
-      {message && (
-        <p
-          role={status === 'error' ? 'alert' : 'status'}
-          className={
-            status === 'error'
-              ? 'rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200'
-              : 'rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200'
-          }
-        >
-          {message}
-        </p>
-      )}
-
-      <p className="text-center text-xs text-zinc-500">
-        By continuing, you agree to KofyOne&apos;s{' '}
-        <Link href="/terms" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
-          Terms of Service
-        </Link>{' '}
-        and{' '}
-        <Link href="/privacy" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
-          Privacy Policy
-        </Link>.
-      </p>
+        {/* Helpful Session Persistence Note */}
+        <div className="pt-1 flex items-center justify-center gap-1.5 text-center text-[11px] text-zinc-400 dark:text-zinc-500">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+          <span>Session persistence enabled — stay logged in automatically</span>
+        </div>
+      </form>
     </div>
   );
 }

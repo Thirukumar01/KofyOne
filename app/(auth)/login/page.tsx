@@ -15,10 +15,10 @@ export default async function LoginPage() {
             <BrandingLogo branding={branding} variant="primary" />
           </div>
           <CardTitle className="text-xl sm:text-2xl font-bold">
-            Sign in to your account
+            Enter KofyOne
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
-            Access your saved resources, learning paths, and personalized recommendations.
+            Sign in with your username and PIN or password to access your personalized resources.
           </CardDescription>
         </CardHeader>
         <CardContent>
