@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, hasAdminCredentials } from '@/lib/supabase/admin';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -56,29 +57,79 @@ export async function POST(request: Request) {
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
     let publicUrl: string | null = null;
+    let storageProvider: 'supabase-storage' | 'local-disk' | 'inline-data-uri' = 'inline-data-uri';
 
     // 3. Attempt upload to Supabase Storage bucket 'kofyone-media'
-    try {
-      const supabase = await createClient();
-      const { data, error } = await supabase.storage
-        .from('kofyone-media')
-        .upload(`logos/${safeFilename}`, fileBuffer, {
-          contentType: mimeType,
-          upsert: false,
-        });
+    if (hasAdminCredentials()) {
+      try {
+        const supabaseAdmin = createAdminClient();
 
-      if (!error && data) {
-        const { data: urlData } = supabase.storage.from('kofyone-media').getPublicUrl(`logos/${safeFilename}`);
-        if (urlData?.publicUrl) {
-          publicUrl = urlData.publicUrl;
+        // Ensure bucket 'kofyone-media' exists; auto-provision if missing
+        try {
+          const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+          const bucketExists = buckets?.some((b) => b.name === 'kofyone-media');
+          if (!bucketExists) {
+            await supabaseAdmin.storage.createBucket('kofyone-media', {
+              public: true,
+              fileSizeLimit: 5 * 1024 * 1024,
+              allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'],
+            });
+          }
+        } catch (bucketCheckErr) {
+          console.warn('Bucket verification/creation notice:', bucketCheckErr);
         }
+
+        // Upload with service role client (bypasses storage.objects RLS)
+        const { data, error } = await supabaseAdmin.storage
+          .from('kofyone-media')
+          .upload(`logos/${safeFilename}`, fileBuffer, {
+            contentType: mimeType,
+            upsert: false,
+          });
+
+        if (!error && data) {
+          const { data: urlData } = supabaseAdmin.storage
+            .from('kofyone-media')
+            .getPublicUrl(`logos/${safeFilename}`);
+
+          if (urlData?.publicUrl) {
+            publicUrl = urlData.publicUrl;
+            storageProvider = 'supabase-storage';
+          }
+        } else if (error) {
+          console.warn('Supabase admin storage upload error:', error);
+        }
+      } catch (adminClientErr) {
+        console.warn('Supabase admin storage client failure:', adminClientErr);
       }
-    } catch (storageErr) {
-      console.warn('Supabase storage upload attempt failed:', storageErr);
+    } else {
+      // Fallback: Attempt upload using standard SSR server client
+      try {
+        const supabase = await createClient();
+        const { data, error } = await supabase.storage
+          .from('kofyone-media')
+          .upload(`logos/${safeFilename}`, fileBuffer, {
+            contentType: mimeType,
+            upsert: false,
+          });
+
+        if (!error && data) {
+          const { data: urlData } = supabase.storage
+            .from('kofyone-media')
+            .getPublicUrl(`logos/${safeFilename}`);
+
+          if (urlData?.publicUrl) {
+            publicUrl = urlData.publicUrl;
+            storageProvider = 'supabase-storage';
+          }
+        }
+      } catch (standardClientErr) {
+        console.warn('Standard client storage upload failure:', standardClientErr);
+      }
     }
 
     // 4. In development only, attempt local public/uploads directory fallback
-    if (!publicUrl && process.env.NODE_ENV === 'development') {
+    if (!publicUrl && process.env.NODE_ENV !== 'production') {
       try {
         const uploadDir = path.join(process.cwd(), 'public', 'uploads');
         if (!fs.existsSync(uploadDir)) {
@@ -87,20 +138,17 @@ export async function POST(request: Request) {
         const localFilePath = path.join(uploadDir, safeFilename);
         fs.writeFileSync(localFilePath, fileBuffer);
         publicUrl = `/uploads/${safeFilename}`;
+        storageProvider = 'local-disk';
       } catch (localWriteErr) {
         console.warn('Local disk fallback failed:', localWriteErr);
       }
     }
 
-    // 5. If storage is unconfigured in production or remote upload failed
+    // 5. Resilient fallback: Convert to Base64 Data URI if storage or disk is unavailable
     if (!publicUrl) {
-      return NextResponse.json(
-        {
-          error:
-            "Remote storage bucket 'kofyone-media' is not configured or accessible. Please provision the 'kofyone-media' bucket in Supabase Storage.",
-        },
-        { status: 503 }
-      );
+      const base64Data = fileBuffer.toString('base64');
+      publicUrl = `data:${mimeType};base64,${base64Data}`;
+      storageProvider = 'inline-data-uri';
     }
 
     return NextResponse.json({
@@ -108,6 +156,7 @@ export async function POST(request: Request) {
       url: publicUrl,
       filename: safeFilename,
       size: file.size,
+      storage: storageProvider,
     });
   } catch (err) {
     console.error('Upload handler error:', err);

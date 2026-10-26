@@ -17,7 +17,7 @@ export const OFFICIAL_LOGOS: Record<string, string> = {
 };
 
 export function resolveResourceLogo(slug?: string, logoUrl?: string | null): string {
-  if (logoUrl && (logoUrl.startsWith('http') || logoUrl.startsWith('/'))) {
+  if (logoUrl && (logoUrl.startsWith('http') || logoUrl.startsWith('/') || logoUrl.startsWith('data:'))) {
     return logoUrl;
   }
   if (slug) {
