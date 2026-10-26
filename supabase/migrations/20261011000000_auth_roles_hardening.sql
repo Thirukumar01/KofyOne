@@ -3,7 +3,7 @@
 -- Migration: 20261011000000_auth_roles_hardening.sql
 -- ==============================================================================
 
--- 1. Create dedicated, private user_roles table
+-- 1. Create or reconcile dedicated, private user_roles table
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'educator', 'admin', 'guest')),
@@ -11,13 +11,79 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Index on role for fast lookups
+-- Reconcile schema differences if user_roles was created by earlier migrations
+DO $$
+BEGIN
+  -- If user_id column exists, drop NOT NULL constraint so (id, role) inserts never fail
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'user_id'
+  ) THEN
+    ALTER TABLE public.user_roles ALTER COLUMN user_id DROP NOT NULL;
+  ELSE
+    -- Add user_id column if it does not exist so queries against user_id continue to work
+    ALTER TABLE public.user_roles ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+  END IF;
+
+  -- Drop any legacy UNIQUE constraints on user_id to prevent multi-column conflict aborts
+  EXECUTE (
+    SELECT COALESCE(
+      string_agg('ALTER TABLE public.user_roles DROP CONSTRAINT ' || quote_ident(conname) || ';', ' '),
+      ''
+    )
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+    WHERE nsp.nspname = 'public'
+      AND rel.relname = 'user_roles'
+      AND con.contype = 'u'
+      AND con.conname LIKE '%user_id%'
+  );
+
+  -- Drop existing check constraints on role to ensure the expanded role set is accepted
+  EXECUTE (
+    SELECT COALESCE(
+      string_agg('ALTER TABLE public.user_roles DROP CONSTRAINT ' || quote_ident(conname) || ';', ' '),
+      ''
+    )
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+    WHERE nsp.nspname = 'public'
+      AND rel.relname = 'user_roles'
+      AND con.contype = 'c'
+  );
+END $$;
+
+-- Enforce updated check constraint on role
+ALTER TABLE public.user_roles
+  DROP CONSTRAINT IF EXISTS user_roles_role_check;
+ALTER TABLE public.user_roles
+  ADD CONSTRAINT user_roles_role_check
+  CHECK (role IN ('student', 'educator', 'admin', 'guest'));
+
+-- Indexes on id, user_id, and role
+CREATE INDEX IF NOT EXISTS idx_user_roles_id ON public.user_roles(id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
 CREATE INDEX IF NOT EXISTS user_roles_role_idx ON public.user_roles(role);
 
+-- Synchronize legacy rows where user_id was set but id was a random UUID
+UPDATE public.user_roles
+SET id = user_id
+WHERE user_id IS NOT NULL AND id != user_id
+  AND NOT EXISTS (SELECT 1 FROM public.user_roles r2 WHERE r2.id = public.user_roles.user_id);
+
+-- Ensure user_id matches id for all rows
+UPDATE public.user_roles
+SET user_id = id
+WHERE user_id IS NULL;
+
 -- 2. Populate user_roles from existing profiles if present
-INSERT INTO public.user_roles (id, role)
-SELECT id, role FROM public.profiles
-ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role;
+INSERT INTO public.user_roles (id, user_id, role)
+SELECT id, id, role FROM public.profiles
+ON CONFLICT (id) DO UPDATE SET
+  user_id = EXCLUDED.user_id,
+  role = EXCLUDED.role;
 
 -- 3. Lock down user_roles with strict Row Level Security
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
@@ -27,20 +93,26 @@ REVOKE ALL ON public.user_roles FROM anon, authenticated;
 
 -- Allow authenticated users to view only their own role
 DROP POLICY IF EXISTS "Users can read own role" ON public.user_roles;
+DROP POLICY IF EXISTS "Users can read their own role" ON public.user_roles;
 CREATE POLICY "Users can read own role"
   ON public.user_roles FOR SELECT
   TO authenticated
-  USING (auth.uid() = id);
+  USING (auth.uid() = id OR auth.uid() = user_id);
 
 -- Admins can read all roles
 DROP POLICY IF EXISTS "Admins can read all roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Admins can manage roles" ON public.user_roles;
 CREATE POLICY "Admins can read all roles"
   ON public.user_roles FOR SELECT
   TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM public.user_roles AS r
-      WHERE r.id = auth.uid() AND r.role = 'admin'
+      WHERE (r.id = auth.uid() OR r.user_id = auth.uid()) AND r.role = 'admin'
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.profiles AS p
+      WHERE p.id = auth.uid() AND p.role = 'admin'
     )
   );
 
@@ -56,6 +128,10 @@ SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles
+    WHERE (id = auth.uid() OR user_id = auth.uid()) AND role = 'admin'
+  )
+  OR EXISTS (
+    SELECT 1 FROM public.profiles
     WHERE id = auth.uid() AND role = 'admin'
   );
 $$;
@@ -71,9 +147,11 @@ STABLE
 SECURITY DEFINER
 SET search_path = ''
 AS $$
-  SELECT role FROM public.user_roles
-  WHERE id = auth.uid()
-  LIMIT 1;
+  SELECT COALESCE(
+    (SELECT role FROM public.user_roles WHERE (id = auth.uid() OR user_id = auth.uid()) LIMIT 1),
+    (SELECT role FROM public.profiles WHERE id = auth.uid() LIMIT 1),
+    'student'
+  );
 $$;
 
 REVOKE ALL ON FUNCTION public.get_current_user_role() FROM PUBLIC;
@@ -112,9 +190,10 @@ BEGIN
       avatar_url = COALESCE(public.profiles.avatar_url, EXCLUDED.avatar_url);
 
   -- Insert default student role into private user_roles table
-  INSERT INTO public.user_roles (id, role)
-  VALUES (NEW.id, 'student')
-  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.user_roles (id, user_id, role)
+  VALUES (NEW.id, NEW.id, 'student')
+  ON CONFLICT (id) DO UPDATE
+  SET user_id = EXCLUDED.user_id;
 
   RETURN NEW;
 END;

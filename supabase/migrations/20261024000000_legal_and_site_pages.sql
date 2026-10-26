@@ -35,9 +35,10 @@ CREATE POLICY "Admins have full access to site pages"
     ON public.site_pages
     FOR ALL
     USING (
-        EXISTS (
+        public.is_admin()
+        OR EXISTS (
             SELECT 1 FROM public.user_roles ur
-            WHERE ur.id = auth.uid() AND ur.role = 'admin'
+            WHERE (ur.id = auth.uid() OR ur.user_id = auth.uid()) AND ur.role = 'admin'
         )
         OR EXISTS (
             SELECT 1 FROM public.profiles p
@@ -45,9 +46,10 @@ CREATE POLICY "Admins have full access to site pages"
         )
     )
     WITH CHECK (
-        EXISTS (
+        public.is_admin()
+        OR EXISTS (
             SELECT 1 FROM public.user_roles ur
-            WHERE ur.id = auth.uid() AND ur.role = 'admin'
+            WHERE (ur.id = auth.uid() OR ur.user_id = auth.uid()) AND ur.role = 'admin'
         )
         OR EXISTS (
             SELECT 1 FROM public.profiles p

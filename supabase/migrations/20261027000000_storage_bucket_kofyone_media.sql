@@ -35,7 +35,7 @@ CREATE POLICY "Admins can upload kofyone media objects"
         AND (
             EXISTS (
                 SELECT 1 FROM public.user_roles ur
-                WHERE ur.id = auth.uid() AND ur.role = 'admin'
+                WHERE (ur.id = auth.uid() OR ur.user_id = auth.uid()) AND ur.role = 'admin'
             )
             OR EXISTS (
                 SELECT 1 FROM public.profiles p
@@ -54,7 +54,7 @@ CREATE POLICY "Admins can update kofyone media objects"
         AND (
             EXISTS (
                 SELECT 1 FROM public.user_roles ur
-                WHERE ur.id = auth.uid() AND ur.role = 'admin'
+                WHERE (ur.id = auth.uid() OR ur.user_id = auth.uid()) AND ur.role = 'admin'
             )
             OR EXISTS (
                 SELECT 1 FROM public.profiles p
@@ -67,7 +67,7 @@ CREATE POLICY "Admins can update kofyone media objects"
         AND (
             EXISTS (
                 SELECT 1 FROM public.user_roles ur
-                WHERE ur.id = auth.uid() AND ur.role = 'admin'
+                WHERE (ur.id = auth.uid() OR ur.user_id = auth.uid()) AND ur.role = 'admin'
             )
             OR EXISTS (
                 SELECT 1 FROM public.profiles p
@@ -86,7 +86,7 @@ CREATE POLICY "Admins can delete kofyone media objects"
         AND (
             EXISTS (
                 SELECT 1 FROM public.user_roles ur
-                WHERE ur.id = auth.uid() AND ur.role = 'admin'
+                WHERE (ur.id = auth.uid() OR ur.user_id = auth.uid()) AND ur.role = 'admin'
             )
             OR EXISTS (
                 SELECT 1 FROM public.profiles p
