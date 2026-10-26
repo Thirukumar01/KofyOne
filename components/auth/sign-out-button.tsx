@@ -11,10 +11,12 @@ export function SignOutButton() {
     setLoading(true);
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      router.refresh();
-      window.location.assign('/');
     } catch {
-      window.location.assign('/');
+      // Non-fatal if logout fetch encounters network issue
+    } finally {
+      router.push('/');
+      router.refresh();
+      setLoading(false);
     }
   }
 

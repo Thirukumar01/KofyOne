@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, ShieldCheck, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { validatePassword } from '@/lib/auth/password';
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +59,7 @@ export default function ResetPasswordPage() {
       setStatus('success');
       setMessage('Password updated successfully! You can now sign in with your new credentials.');
       setTimeout(() => {
-        window.location.assign('/login');
+        router.push('/login');
       }, 2000);
     } catch (err) {
       setStatus('error');

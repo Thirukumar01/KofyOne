@@ -13,6 +13,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, KeyRound, ShieldCheck, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import { validatePassword } from '@/lib/auth/password';
 type FlowStage = 'verify_security' | 'set_new_password' | 'completed';
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [stage, setStage] = useState<FlowStage>('verify_security');
 
   // Stage 1 Fields
@@ -133,7 +135,7 @@ export default function ForgotPasswordPage() {
       setStage('completed');
       setSuccessMessage('Password updated successfully! Redirecting you to sign in…');
       setTimeout(() => {
-        window.location.assign('/login');
+        router.push('/login');
       }, 2000);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed to update password.');

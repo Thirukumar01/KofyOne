@@ -8,9 +8,61 @@ import { EmptyState } from '@/components/shared/empty-state';
 export default async function FavoritesPage() {
   const user = await getSessionUser();
   if (!user) redirect('/login?next=/favorites');
-  const supabase = await createClient();
-  const { data, error } = await supabase.from('user_favorites').select('resource_id, resources(name, slug, description)').eq('user_id', user.id).order('created_at', { ascending: false });
-  if (error) throw new Error(`Favorites could not be loaded: ${error.message}`);
-  const items = (data ?? []) as Array<{ resource_id: string; resources: { name: string; slug: string; description: string } | null }>;
-  return <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8"><h1 className="text-3xl font-bold">Favorites</h1>{items.length === 0 ? <EmptyState className="mt-8" title="No favorites yet" description="Save resources while you explore them." /> : <div className="mt-8 grid gap-5 sm:grid-cols-2">{items.map(({ resource_id, resources }) => resources && <Link key={resource_id} href={`/resources/${resources.slug}`}><Card className="h-full hover:border-orange-400"><CardHeader><CardTitle>{resources.name}</CardTitle></CardHeader><CardContent><p className="text-sm text-zinc-600 dark:text-zinc-400">{resources.description}</p></CardContent></Card></Link>)}</div>}</div>;
+
+  let items: Array<{
+    resource_id: string;
+    resources: { name: string; slug: string; description: string } | null;
+  }> = [];
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('user_favorites')
+      .select('resource_id, resources(name, slug, description)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      items = data as typeof items;
+    }
+  } catch {
+    // Graceful fallback if database connection is pending
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Favorites</h1>
+      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        Saved resources and learning paths bookmarked for quick access.
+      </p>
+
+      {items.length === 0 ? (
+        <EmptyState
+          className="mt-8"
+          title="No favorites yet"
+          description="Save resources while you explore them to build your personal learning library."
+        />
+      ) : (
+        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+          {items.map(
+            ({ resource_id, resources }) =>
+              resources && (
+                <Link key={resource_id} href={`/resources/${resources.slug}`}>
+                  <Card className="h-full hover:border-orange-400 transition-all hover:shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{resources.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-3">
+                        {resources.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )
+          )}
+        </div>
+      )}
+    </div>
+  );
 }

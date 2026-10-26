@@ -1,4 +1,4 @@
-﻿# KofyOne — System Architecture Specification
+# KofyOne — System Architecture Specification
 
 ## 1. High-Level Architectural Overview
 
@@ -97,14 +97,20 @@ kofyone/
 Database engine: **PostgreSQL 15+ hosted on Supabase**.
 
 ### Core Tables
-1. **`platforms`**: Generic platforms. First record: Microsoft (`slug = 'microsoft'`).
-2. **`tracking_configs`**: Campaign attribution configurations per platform (parameter `wt.mc_id`, value `studentamb_504640`).
+1. **`platforms`**: Multi-provider platforms (Microsoft, AWS, Google Cloud, Other).
+2. **`tracking_configs`**: Campaign attribution configurations per platform (e.g. `wt.mc_id=studentamb_504640`).
 3. **`categories`**: Topic classification (Student, AI, Cloud, Developer, Productivity).
 4. **`resources`**: Official educational and developer assets with metadata, official URLs, view/click counters, and generated `search_vector`.
 5. **`resource_categories`**: Many-to-many join table between resources and categories.
-6. **`user_favorites`**: Many-to-many relationship linking `auth.users` to saved resources.
+6. **`user_favorites`**: User-saved bookmarks (`auth.uid() = user_id`).
 7. **`user_recently_viewed`**: User visit history and timestamp tracking.
 8. **`audit_logs`**: Administrative change logs with before/after state diffs.
+9. **`user_roles`**: Private RBAC role mappings (`student`, `educator`, `admin`, `guest`) with direct access revoked and checked via `is_admin()`.
+10. **`user_security_questions`**: Salted bcrypt password recovery hashes for self-service reset without email delivery dependencies.
+11. **`security_verification_attempts`**: Anti-brute-force rate limiter enforcing 2-attempt 1-hour lockouts.
+12. **`password_reset_tokens`**: Short-lived, single-use reset tokens.
+13. **`site_branding`**: Dynamic administrative CMS for logos, site name, tagline, and brand metadata.
+14. **`site_pages`**: Dynamic CMS for Terms, Privacy, About, and Contact pages with public/draft state isolation.
 
 ---
 
@@ -113,7 +119,7 @@ Database engine: **PostgreSQL 15+ hosted on Supabase**.
 The platform architecture is fully decoupled from vendor specifics:
 - The `Platform` interface (`types/platform.ts`) defines generic metadata (`id`, `name`, `slug`, `website_url`, `domain`, `is_active`, `display_order`).
 - `Resource` references `platform_id` rather than embedding vendor-specific logic.
-- Adding a future platform requires zero database schema modifications or component rewrites—only an administrative insert into `platforms`.
+- Supported providers currently include Microsoft, AWS, Google Cloud, and Other.
 
 ---
 
@@ -124,8 +130,7 @@ Student ambassadors and community contributors need attribution on official ecos
 ### Separation of Concerns:
 - **Storage**: `tracking_configs` stores the parameter and value.
 - **Decoration**: `buildTrackedUrl(officialUrl, trackingConfig)` in `lib/tracking/url-builder.ts` safely parses destination URLs and injects attribution parameters without breaking existing query strings or anchor tags.
-- **General Utilities**: `lib/url.ts` provides URL validation, domain extraction, query parameter merging, and fragment preservation.
-- **Interaction**: The `useTracking` hook decorates links in client components and automatically triggers a `resource_opened` analytics event.
+- **Redirection**: Outbound links route through `/go/[slug]`, which calls the `increment_resource_click` stored procedure and issues an HTTP 302 redirect.
 
 ---
 
@@ -136,7 +141,7 @@ Student ambassadors and community contributors need attribution on official ecos
    - Weight `B`: Resource Description
 2. **Indexing**: GIN index (`idx_resources_search_vector`) enables sub-millisecond keyword lookup.
 3. **Search Procedure**: Stored procedure `search_resources(...)` performs ranked search using `plainto_tsquery` or `websearch_to_tsquery` combined with platform and category filters.
-4. **Service Abstraction**: `PostgresSearchService` in `lib/search/search-service.ts` implements `ISearchService`, allowing plug-and-play evolution in future phases.
+4. **Service Abstraction**: `PostgresSearchService` in `lib/search/search-service.ts` implements `ISearchService`.
 
 ---
 
@@ -149,12 +154,12 @@ Telemetry is powered by **PostHog**:
 
 ---
 
-## 8. Media & Storage Architecture (Cloudflare R2)
+## 8. Media & Storage Architecture (Supabase Storage & Cloudflare R2)
 
-Object storage uses Cloudflare R2:
-- Binary assets (logos, screenshots, banners) are stored in R2 buckets.
-- PostgreSQL stores only CDN keys and public URLs.
-- The `CloudflareR2StorageClient` (`lib/storage/r2-client.ts`) generates public URLs and provides pre-signed upload URL capabilities for Phase 3 asset management.
+Object storage uses Supabase Storage with optional Cloudflare R2:
+- Binary assets (logos, icons, branding assets) are stored in the public `kofyone-media` Supabase Storage bucket.
+- Uploads are guarded via `app/api/admin/upload/route.ts` restricting access to administrators and validating MIME types (PNG, JPG, WebP) and size limits (2MB).
+- On serverless production environments (Vercel, Cloudflare), uploads operate strictly via remote object storage, preventing read-only filesystem errors (`EROFS`).
 
 ---
 
@@ -164,5 +169,10 @@ Object storage uses Cloudflare R2:
   - `config/env.ts` provides `clientEnv` (safe for browser) and `getServerEnv()` (guarded, throws on client).
   - `lib/supabase/client.ts` uses the Anon key and runs in the browser.
   - `lib/supabase/admin.ts` uses the Service Role key and throws an immediate error if executed in client-side code.
-- **Environment Isolation**: `.env.example` documents all parameters; real secrets must never be committed.
-- **Route Guarding**: Route groups `(admin)` are architected for middleware session validation.
+- **Authentication & Defense-in-Depth**:
+  - Streamlined Username + Password/PIN auth mapping to `${username}@myapp.local` with persistent HTTP-only SSR cookies.
+  - Salted bcrypt security questions with 2-failure 1-hour lockout protection against credential guessing.
+  - Cloudflare Turnstile token validation on auth routes to prevent automated brute-force attacks.
+- **Route Guarding**:
+  - Request interceptor `proxy.ts` guards `/dashboard`, `/profile`, `/settings/security`, and `/admin/*`.
+  - Server Component layouts (`app/(admin)/admin/layout.tsx`) independently verify admin status via `getCurrentUserProfile()` querying `public.is_admin()`.

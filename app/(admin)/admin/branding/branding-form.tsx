@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { SiteBranding } from '@/types/branding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -304,9 +305,12 @@ export function BrandingForm({ initialBranding }: { initialBranding: SiteBrandin
               <div className="flex flex-col items-center gap-3">
                 <div className="flex h-24 w-48 items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-2 dark:border-zinc-700 dark:bg-zinc-800/40">
                   {primaryLogoUrl ? (
-                    <img
+                    <Image
                       src={primaryLogoUrl}
-                      alt={logoAlt}
+                      alt={logoAlt || 'Logo'}
+                      width={180}
+                      height={80}
+                      unoptimized
                       className="max-h-full max-w-full object-contain"
                     />
                   ) : (

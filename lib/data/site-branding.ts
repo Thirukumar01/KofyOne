@@ -20,6 +20,9 @@ export function getLocalSiteBranding(): SiteBranding {
 }
 
 export function saveLocalSiteBranding(branding: SiteBranding): void {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
   try {
     const dir = path.dirname(BRANDING_FILE_PATH);
     if (!fs.existsSync(dir)) {
@@ -68,14 +71,17 @@ export async function updateSiteBranding(
     updated_by: userId ?? current.updated_by,
   };
 
-  // 1. Always persist to local cache first
-  saveLocalSiteBranding(updated);
+  // 1. In non-production environments, persist to local cache
+  if (process.env.NODE_ENV !== 'production') {
+    saveLocalSiteBranding(updated);
+  }
 
-  // 2. Persist to Supabase if connected
+  // 2. Persist to Supabase
+  let dbPersisted = false;
   try {
     const supabase = await createClient();
-    await (supabase.from('site_branding') as unknown as {
-      upsert: (val: Record<string, unknown>) => Promise<unknown>;
+    const { error } = await (supabase.from('site_branding') as unknown as {
+      upsert: (val: Record<string, unknown>) => Promise<{ error?: unknown }>;
     }).upsert({
       id: 'current',
       app_name: updated.app_name,
@@ -89,8 +95,15 @@ export async function updateSiteBranding(
       updated_at: updated.updated_at,
       updated_by: updated.updated_by,
     });
+    if (!error) {
+      dbPersisted = true;
+    }
   } catch (err) {
-    console.warn('Could not persist branding to Supabase database, local cache updated:', err);
+    console.warn('Could not persist branding to Supabase database:', err);
+  }
+
+  if (!dbPersisted && process.env.NODE_ENV === 'production') {
+    throw new Error('Database connection failed. Unable to persist site branding changes to PostgreSQL.');
   }
 
   return updated;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { SiteBranding } from '@/types/branding';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -48,9 +49,12 @@ export function BrandingLogo({
               : 'h-8 w-auto min-w-[32px]'
           )}
         >
-          <img
+          <Image
             src={logoUrl}
             alt={logoAlt}
+            width={120}
+            height={32}
+            unoptimized
             onError={() => setImgError(true)}
             className={cn(
               'object-contain max-h-full max-w-full',

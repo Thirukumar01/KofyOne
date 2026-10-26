@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 export const OFFICIAL_LOGOS: Record<string, string> = {
@@ -82,13 +83,13 @@ export function ResourceLogo({
         containerClassName
       )}
     >
-      <img
+      <Image
         src={logoSrc}
         alt={name ? `${name} logo` : 'Resource logo'}
         width={size}
         height={size}
+        unoptimized
         className={cn('h-full w-full object-contain', className)}
-        loading="lazy"
       />
     </div>
   );

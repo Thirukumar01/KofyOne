@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -178,7 +179,7 @@ export function ResourceForm({ categories }: { categories: CategoryItem[] }) {
                       : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
                   }`}
                 >
-                  <img src={preset.url} alt={preset.label} className="h-6 w-6 object-contain" />
+                  <Image src={preset.url} alt={preset.label} width={24} height={24} unoptimized className="h-6 w-6 object-contain" />
                   <span className="text-[10px] font-medium leading-tight text-zinc-700 dark:text-zinc-300 line-clamp-1">
                     {preset.label}
                   </span>

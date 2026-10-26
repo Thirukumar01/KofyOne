@@ -1,4 +1,4 @@
-﻿# KofyOne — Project Context & Source of Truth
+# KofyOne — Project Context & Source of Truth
 
 ## 1. Project Identity
 - **Product Name**: KofyOne
@@ -8,27 +8,25 @@
 ---
 
 ## 2. Product Scope & Strategy
-- **Initial Ecosystem Scope**: Microsoft Ecosystem Only.
-- **Future Platform Strategy**:
+- **Ecosystem Scope**: Multi-Provider Platform supporting **Microsoft**, **AWS**, **Google Cloud**, and **Other** (OpenAI, GitHub, modern student tech tools).
+- **Canonical Categories**: Five foundational discovery categories: **Student**, **AI**, **Cloud**, **Developer**, and **Productivity**.
+- **Platform Architecture**:
   - The architecture is strictly platform-independent.
-  - Core database entities (`Platform`, `Resource`, `Category`, `TrackingConfig`) use generic identifiers and relations.
-  - Future platforms (e.g., Google, AWS, GitHub) will be onboarded via the Admin Portal and database migrations when planned.
-  - **Constraint**: Do NOT create, hard-code, or mock future platforms now. Microsoft is the sole active platform in initial phases.
+  - Core database entities (`platforms`, `resources`, `categories`, `tracking_configs`) use generic identifiers and relations.
+  - Dynamic Branding CMS (`site_branding`) and Legal/Site Pages CMS (`site_pages`) empower administrative management without code deployments.
 
 ---
 
 ## 3. Locked Technology Stack
-- **Frontend Framework**: Next.js (App Router), React, TypeScript
-- **Styling**: Tailwind CSS
-- **UI Architecture**: Modular, accessible, reusable component architecture
-- **Authentication**: Supabase Auth (SSO, OAuth, Magic Links)
-- **Backend & Database**: Supabase (PostgreSQL with Row Level Security)
+- **Frontend Framework**: Next.js 16 (App Router with Turbopack), React 19, TypeScript 5
+- **Styling**: Tailwind CSS v4 with `@tailwindcss/postcss`
+- **UI Architecture**: Modular, accessible, responsive component system with Lucide icons
+- **Authentication**: Streamlined Username + Password/PIN auth mapped internally to `${username}@myapp.local` for Supabase SSR cookies, salted `bcryptjs` security questions for self-service password recovery, and Cloudflare Turnstile anti-bot verification
+- **Backend & Database**: Supabase (PostgreSQL with Row Level Security & custom RPCs)
 - **Search Engine**: PostgreSQL Full-Text Search (`tsvector`, `tsquery`, GIN indexes)
-- **Analytics & Telemetry**: PostHog (typed events, privacy-respecting client/server dispatching)
-- **Object & Media Storage**: Cloudflare R2 (metadata in PostgreSQL, assets served via global CDN)
-- **Hosting**: Cloudflare Pages / Cloudflare edge runtime
+- **Object & Media Storage**: Supabase Storage (`kofyone-media` bucket) with optional Cloudflare R2 CDN
+- **Hosting**: Vercel / Cloudflare Workers (`vinext`)
 - **Version Control**: Git & GitHub
-- **AI Development Assistants**: Antigravity, GitHub Copilot
 
 > **Rule**: Do not replace or modify this stack unless an unresolvable technical blocker is formally identified and documented.
 
@@ -36,9 +34,9 @@
 
 ## 4. Architecture Principles
 1. **Separation of Concerns**: Strict boundary between UI, application logic, authentication, database access, search, analytics, storage, URL tracking, platform configuration, and admin utilities.
-2. **Platform Abstraction**: All resources link to generic platform references. No Microsoft-specific hard-coding in core schemas or component logic.
-3. **Admin-Controlled Dynamic Content**: Platforms, categories, resource lists, and tracking attribution must be database-backed and manageable through the future Admin Portal.
-4. **No Premature Complexity**: No unneeded third-party integrations (e.g. no Algolia/Elasticsearch or microservices during early phases).
+2. **Platform Abstraction**: All resources link to generic platform references. Multi-provider platform taxonomy loaded dynamically.
+3. **Admin-Controlled Dynamic Content**: Platforms, categories, resource lists, site branding, legal pages, and tracking attribution are database-backed and manageable through the Admin Portal.
+4. **No Premature Complexity**: Native PostgreSQL full-text search and storage over third-party microservices.
 5. **Production Orientation**: Strict TypeScript typings, zero `any` shortcuts, robust error boundaries, accessible UI.
 
 ---
@@ -50,13 +48,13 @@
 - **Architectural Requirement**:
   - **NEVER** hard-code this parameter or value into application logic, page components, or hardcoded strings.
   - Attribution configs reside in the `tracking_configs` database table and are loaded dynamically.
-  - A generic URL builder (`lib/tracking/url-builder.ts` and `lib/url.ts`) and React hook (`hooks/use-tracking.ts`) apply the attribution parameter dynamically at runtime.
+  - Outbound clicks route through `/go/[slug]`, which dynamically appends attribution via `lib/tracking/url-builder.ts` and records telemetry via `increment_resource_click` RPC.
 
 ---
 
 ## 6. Security Principles
 - **Zero Exposed Secrets**: No API keys, service role tokens, or private credentials committed to source code.
-- **Row Level Security (RLS)**: Enforced on all Supabase PostgreSQL tables.
+- **Row Level Security (RLS)**: Enforced across all Supabase PostgreSQL tables; direct client access revoked on sensitive security tables (`user_security_questions`, `security_verification_attempts`, `password_reset_tokens`).
 - **Client/Server Isolation**:
   - Supabase Service Role client (`lib/supabase/admin.ts` and `config/env.ts`) throws runtime errors if loaded in browser contexts.
   - Public browser operations use restricted Anon keys strictly guarded by RLS.
@@ -65,19 +63,16 @@
 
 ---
 
-## 7. Current Development Phase
-- **Current Phase**: Phase 1: Foundation Setup (COMPLETE)
-- **Next Phase**: Phase 2: Database Setup, Supabase Integration & Core Schema Verification
-
-### Development Roadmap:
-- **Phase 0**: Project Foundation & Architecture (COMPLETE)
-- **Phase 1**: Foundation Setup (COMPLETE)
-- **Phase 2**: Database Setup, Supabase Integration & Core Schema Verification (UPCOMING)
-- **Phase 3**: Authentication & User Profile Layer
-- **Phase 4**: Resource Discovery Engine & Search System
-- **Phase 5**: User Engagement (Favorites, Recently Viewed, History)
-- **Phase 6**: Admin Portal (Platform, Resource, and Tracking Management)
-- **Phase 7**: Telemetry, Asset Storage & Production Hardening
+## 7. Current Development Status
+- **Current Status**: MVP Ready for Testing / Private Beta Candidate
+- **Accomplishments Completed**:
+  - Multi-provider discovery directory (Microsoft, AWS, Google Cloud, Other) with 5 canonical categories.
+  - Streamlined Username + Password/PIN authentication with persistent session cookies.
+  - Salted bcrypt security questions with 2-failure 1-hour lockout protection.
+  - Cloudflare Turnstile human verification integration.
+  - Outbound contributor tracking engine with database-driven click logging.
+  - Admin Portal with Resource, Platform, Category, Branding, and Legal CMS editors.
+  - Clean Next.js 16 Turbopack build compiling 50 routes.
 
 ---
 

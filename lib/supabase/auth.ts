@@ -40,26 +40,28 @@ export async function getSessionUser(): Promise<User | null> {
  * combining Auth identity, profile metadata, and verified user role.
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  // Check admin session cookie first for instant local/fallback admin resolution
-  try {
-    const cookieStore = await cookies();
-    const adminCookie = cookieStore.get('kofyone_admin_session')?.value?.trim();
-    const adminEmail = (process.env.ADMIN_EMAIL || '').trim();
-    if (adminCookie && adminEmail && adminCookie === Buffer.from(adminEmail).toString('base64')) {
-      return {
-        id: 'admin-local',
-        email: adminEmail,
-        role: 'admin',
-        username: 'admin',
-        full_name: 'Administrator',
-        avatar_url: null,
-        preferred_platform: 'microsoft',
-        created_at: '2026-10-23T00:00:00.000Z',
-        updated_at: new Date().toISOString(),
-      };
+  // In development only, check admin session cookie for instant local fallback admin resolution
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const cookieStore = await cookies();
+      const adminCookie = cookieStore.get('kofyone_admin_session')?.value?.trim();
+      const adminEmail = (process.env.ADMIN_EMAIL || '').trim();
+      if (adminCookie && adminEmail && adminCookie === Buffer.from(adminEmail).toString('base64')) {
+        return {
+          id: 'admin-local',
+          email: adminEmail,
+          role: 'admin',
+          username: 'admin',
+          full_name: 'Administrator',
+          avatar_url: null,
+          preferred_platform: 'microsoft',
+          created_at: '2026-10-23T00:00:00.000Z',
+          updated_at: new Date().toISOString(),
+        };
+      }
+    } catch {
+      // Cookies inaccessible in this context
     }
-  } catch {
-    // Cookies inaccessible in this context
   }
 
   const user = await getSessionUser();

@@ -29,8 +29,10 @@ export function getLocalSitePages(): Record<string, SitePage> {
   return { ...DEFAULT_LEGAL_PAGES };
 }
 
-// 2. Save local cache
 export function saveLocalSitePages(pages: Record<string, SitePage>): void {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
   try {
     const dir = path.dirname(SITE_PAGES_FILE);
     if (!fs.existsSync(dir)) {
@@ -167,17 +169,20 @@ export async function updateAdminPage(
     updated_by: userId ?? current.updated_by ?? null,
   };
 
-  // 1. Always save to local cache
-  const localMap = getLocalSitePages();
-  localMap[slug] = updated;
-  saveLocalSitePages(localMap);
+  // 1. In non-production environments, save to local cache
+  if (process.env.NODE_ENV !== 'production') {
+    const localMap = getLocalSitePages();
+    localMap[slug] = updated;
+    saveLocalSitePages(localMap);
+  }
 
   // 2. Persist to Supabase if reachable
+  let dbPersisted = false;
   try {
     const supabase = await getSupabaseClient();
     if (supabase) {
-      await (supabase.from('site_pages') as unknown as {
-        upsert: (record: Record<string, unknown>) => Promise<unknown>;
+      const { error } = await (supabase.from('site_pages') as unknown as {
+        upsert: (record: Record<string, unknown>) => Promise<{ error?: unknown }>;
       }).upsert({
         slug: updated.slug,
         title: updated.title,
@@ -188,9 +193,16 @@ export async function updateAdminPage(
         updated_at: updated.updated_at,
         updated_by: updated.updated_by,
       });
+      if (!error) {
+        dbPersisted = true;
+      }
     }
   } catch (err) {
-    console.warn('Could not persist site page to Supabase, local cache updated:', err);
+    console.warn('Could not persist site page to Supabase:', err);
+  }
+
+  if (!dbPersisted && process.env.NODE_ENV === 'production') {
+    throw new Error('Database connection failed. Unable to persist site page changes to PostgreSQL.');
   }
 
   return updated;

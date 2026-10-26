@@ -73,19 +73,34 @@ export async function POST(request: Request) {
           publicUrl = urlData.publicUrl;
         }
       }
-    } catch {
-      // Supabase storage bucket not configured or error; fall back to local public upload
+    } catch (storageErr) {
+      console.warn('Supabase storage upload attempt failed:', storageErr);
     }
 
-    // 4. Fallback to local public/uploads directory if Supabase storage was unavailable
-    if (!publicUrl) {
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+    // 4. In development only, attempt local public/uploads directory fallback
+    if (!publicUrl && process.env.NODE_ENV === 'development') {
+      try {
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        const localFilePath = path.join(uploadDir, safeFilename);
+        fs.writeFileSync(localFilePath, fileBuffer);
+        publicUrl = `/uploads/${safeFilename}`;
+      } catch (localWriteErr) {
+        console.warn('Local disk fallback failed:', localWriteErr);
       }
-      const localFilePath = path.join(uploadDir, safeFilename);
-      fs.writeFileSync(localFilePath, fileBuffer);
-      publicUrl = `/uploads/${safeFilename}`;
+    }
+
+    // 5. If storage is unconfigured in production or remote upload failed
+    if (!publicUrl) {
+      return NextResponse.json(
+        {
+          error:
+            "Remote storage bucket 'kofyone-media' is not configured or accessible. Please provision the 'kofyone-media' bucket in Supabase Storage.",
+        },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json({
