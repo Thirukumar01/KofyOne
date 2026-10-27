@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SignOutButton } from '@/components/auth/sign-out-button';
 import { BrandingLogo } from '@/components/branding/branding-logo';
+import { ThemeToggle } from '@/components/common/theme-provider';
+import { PresetAvatar } from '@/components/common/preset-avatar';
 import type { UserProfile } from '@/types/user';
 import type { SiteBranding } from '@/types/branding';
 
@@ -23,6 +25,12 @@ export function MobileNav({
 
   const toggle = () => setIsOpen((prev) => !prev);
   const close = () => setIsOpen(false);
+
+  const displayName =
+    profile?.display_name ||
+    profile?.full_name ||
+    profile?.username ||
+    (profile?.email ? profile.email.split('@')[0] : '');
 
   return (
     <div className="md:hidden">
@@ -56,9 +64,11 @@ export function MobileNav({
           aria-modal="true"
           aria-label="Mobile Navigation Menu"
         >
-          <div className="mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
             <BrandingLogo branding={branding} />
+            <ThemeToggle />
           </div>
+
           <nav className="flex flex-col space-y-4">
             {siteConfig.mainNav.map((item) => {
               const isActive = pathname === item.href;
@@ -82,6 +92,18 @@ export function MobileNav({
 
             {profile && (
               <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-col space-y-2 text-sm">
+                <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-zinc-50 dark:bg-zinc-900/60">
+                  <PresetAvatar avatarId={profile.avatar_url} size={28} />
+                  <div className="truncate">
+                    <span className="block text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                      {displayName}
+                    </span>
+                    <span className="block text-[10px] text-zinc-400 truncate">
+                      {profile.email}
+                    </span>
+                  </div>
+                </div>
+
                 <Link
                   href="/dashboard"
                   onClick={close}
@@ -90,11 +112,11 @@ export function MobileNav({
                   Dashboard
                 </Link>
                 <Link
-                  href="/profile"
+                  href="/settings"
                   onClick={close}
                   className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600"
                 >
-                  Profile Settings
+                  User Settings & Profile
                 </Link>
                 <Link
                   href="/settings/security"
@@ -119,7 +141,7 @@ export function MobileNav({
               {profile ? (
                 <div className="flex items-center justify-between py-2">
                   <span className="text-xs text-zinc-500 truncate max-w-[200px]">
-                    {profile.email}
+                    {displayName}
                   </span>
                   <SignOutButton />
                 </div>

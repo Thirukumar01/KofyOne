@@ -10,6 +10,7 @@ import { FavoriteButton } from '@/components/resources/favorite-button';
 import { RecentTracker } from '@/components/personalization/recent-tracker';
 import { ResourceLogo } from '@/components/resources/resource-logo';
 import { siteConfig } from '@/config/site';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,18 +24,37 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ResourceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const { data: resource, error } = await getPublishedResourceBySlug(slug);
-  if (!resource && error) return <div className="mx-auto max-w-3xl px-4 py-16 flex flex-col items-center gap-4"><ErrorState title="Resource unavailable" message={error.message} /><Link href={`/resources/${slug}`}><Button variant="outline" size="sm">Retry</Button></Link></div>;
+  if (!resource && error) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 flex flex-col items-center gap-4">
+        <ErrorState title="Resource unavailable" message={error.message} />
+        <Link href={`/resources/${slug}`}>
+          <Button variant="outline" size="sm">Retry</Button>
+        </Link>
+      </div>
+    );
+  }
   if (!resource) notFound();
+
+  const views = Number(resource.view_count || 0);
+  const clicks = Number(resource.click_count || 0);
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      <RecentTracker resourceId={resource.id} />
-      <Link href="/resources" className="text-sm font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400">
-        ← Back to resources
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 space-y-6">
+      <RecentTracker resourceId={resource.id} resourceSlug={resource.slug} />
+
+      <Link
+        href="/resources"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 transition-colors"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to catalog
       </Link>
-      <Card className="mt-6 border-zinc-200 shadow-md dark:border-zinc-800">
+
+      <Card className="border-zinc-200 shadow-md dark:border-zinc-800">
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {resource.categories.map((category) => (
                 <Badge key={category.id} variant="brand">
                   {category.name}
@@ -44,7 +64,23 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
                 <Badge variant="outline">{resource.subcategory}</Badge>
               )}
             </div>
-            <Badge variant="outline">{resource.platform?.name ?? 'Microsoft'}</Badge>
+
+            {/* Formatted Views & Clicks Badges */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                title="Resource page impressions"
+              >
+                👁️ {views.toLocaleString()} views
+              </span>
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-orange-50 dark:bg-orange-950/40 px-2.5 py-0.5 text-xs font-semibold text-orange-700 dark:text-orange-300"
+                title="Outbound link referrals"
+              >
+                🔗 {clicks.toLocaleString()} clicks
+              </span>
+              <Badge variant="outline">{resource.platform?.name ?? 'Microsoft'}</Badge>
+            </div>
           </div>
 
           <div className="flex items-start gap-4 pt-2">
@@ -53,7 +89,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
               name={resource.name}
               logoUrl={resource.logo_url}
               size={56}
-              containerClassName="rounded-2xl p-2 shadow-md"
+              containerClassName="rounded-2xl p-2 shadow-md shrink-0"
             />
             <div>
               <CardTitle className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-50">
@@ -65,9 +101,18 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
             </div>
           </div>
         </CardHeader>
+
         <CardContent className="flex flex-wrap items-center gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-          <a href={`/go/${resource.slug}`} target="_blank" rel="noreferrer">
-            <Button size="lg" className="shadow-sm">Open Official Resource</Button>
+          <a
+            href={`/go/${resource.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex"
+          >
+            <Button size="lg" className="shadow-sm gap-2">
+              <span>Open Official Resource</span>
+              <ExternalLink className="h-4 w-4" />
+            </Button>
           </a>
           <FavoriteButton
             resourceId={resource.id}

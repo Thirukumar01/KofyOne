@@ -1,11 +1,12 @@
 /**
  * KofyOne - User Profile Update Route Handler
- * Strictly restricts updates to user-editable fields (full_name, avatar_url, preferred_platform).
- * Prevents self-promotion or email tampering.
+ * Strictly restricts updates to user-editable fields (full_name, avatar_url, preferred_platform, bio, etc.).
+ * Strictly enforces official preset avatar keys; arbitrary external URLs are rejected.
  */
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isValidPresetAvatar } from '@/config/avatars';
 
 export async function POST(request: Request) {
   try {
@@ -23,21 +24,49 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const fullName = typeof body.full_name === 'string' ? body.full_name.trim().slice(0, 100) : null;
-    const avatarUrl = typeof body.avatar_url === 'string' && body.avatar_url.trim().startsWith('http')
-      ? body.avatar_url.trim().slice(0, 500)
-      : null;
-    const preferredPlatform = typeof body.preferred_platform === 'string'
-      ? body.preferred_platform.trim().slice(0, 50)
-      : 'microsoft';
+
+    // 1. Preset Avatar Validation
+    let avatarUrl: string | null = null;
+    if (typeof body.avatar_url === 'string' && body.avatar_url.trim().length > 0) {
+      const trimmed = body.avatar_url.trim();
+      if (!isValidPresetAvatar(trimmed)) {
+        return NextResponse.json(
+          {
+            error:
+              'Custom image URLs and file uploads are disabled. Please select one of the 6 official preset avatars.',
+          },
+          { status: 400 }
+        );
+      }
+      avatarUrl = trimmed;
+    }
+
+    const fullName =
+      typeof body.full_name === 'string'
+        ? body.full_name.trim().slice(0, 100)
+        : typeof body.display_name === 'string'
+        ? body.display_name.trim().slice(0, 100)
+        : null;
+
+    const preferredPlatform =
+      typeof body.preferred_platform === 'string'
+        ? body.preferred_platform.trim().slice(0, 50)
+        : 'microsoft';
+
+    const bio =
+      typeof body.bio === 'string' ? body.bio.trim().slice(0, 300) : null;
 
     // Strictly limit updated columns - NEVER accept role or email from request!
     const { error: updateError } = await (supabase.from('profiles') as unknown as {
-      update: (vals: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<{ error: unknown }> };
+      update: (vals: Record<string, unknown>) => {
+        eq: (col: string, val: string) => Promise<{ error: unknown }>;
+      };
     })
       .update({
         full_name: fullName,
+        display_name: fullName,
         avatar_url: avatarUrl,
+        bio,
         preferred_platform: preferredPlatform,
         updated_at: new Date().toISOString(),
       })

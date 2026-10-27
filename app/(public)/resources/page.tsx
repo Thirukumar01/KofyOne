@@ -1,13 +1,12 @@
 import Link from 'next/link';
-import { Search, ExternalLink, Filter } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { getActiveCategories, getActivePlatforms, getPublishedResources } from '@/lib/supabase/db';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ErrorState } from '@/components/shared/error-state';
-import { ResourceLogo } from '@/components/resources/resource-logo';
+import { ResourceCard } from '@/components/resources/resource-card';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -216,63 +215,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
         <>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((resource) => (
-              <Card
-                key={resource.id}
-                className="flex flex-col hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all group"
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <ResourceLogo
-                      slug={resource.slug}
-                      name={resource.name}
-                      logoUrl={resource.logo_url}
-                      size={40}
-                    />
-                    <div className="flex items-center gap-1.5">
-                      <span className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                        {resource.platform?.name ?? 'Microsoft'}
-                      </span>
-                      {resource.featured && <Badge variant="success">Featured</Badge>}
-                    </div>
-                  </div>
-                  <CardTitle className="mt-3 text-lg font-bold group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                    {resource.name}
-                  </CardTitle>
-                  <CardDescription className="line-clamp-2 text-xs">
-                    {resource.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="mt-auto flex items-center justify-between gap-3 pt-0">
-                  <div className="flex flex-wrap gap-1">
-                    {resource.categories.slice(0, 2).map((item) => (
-                      <Badge key={item.id || item.slug} variant="brand" className="text-[10px]">
-                        {item.name}
-                      </Badge>
-                    ))}
-                    {resource.subcategory && (
-                      <Badge variant="outline" className="text-[10px]">
-                        {resource.subcategory}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Link href={`/resources/${resource.slug}`}>
-                      <Button variant="outline" size="sm" className="h-8 text-xs px-2.5">
-                        Details
-                      </Button>
-                    </Link>
-                    <a
-                      href={`/go/${resource.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex h-8 items-center justify-center rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white shadow-sm hover:bg-orange-700 transition-colors"
-                      title="Open official destination"
-                    >
-                      Open <ExternalLink className="ml-1 h-3 w-3" />
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
+              <ResourceCard key={resource.id} resource={resource} />
             ))}
           </div>
 

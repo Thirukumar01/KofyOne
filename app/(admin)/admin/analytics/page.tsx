@@ -5,6 +5,8 @@ import { AdminHeader } from '@/components/admin/admin-header';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { MousePointerClick, Eye, TrendingUp, Compass } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminAnalyticsPage() {
   const profile = await getCurrentUserProfile();
   if (!profile) redirect('/login?next=/admin/analytics');
@@ -20,12 +22,12 @@ export default async function AdminAnalyticsPage() {
       .from('resources')
       .select('name, slug, click_count, view_count')
       .order('click_count', { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (data) {
       topResources = data as unknown as typeof topResources;
-      totalClicks = topResources.reduce((acc, r) => acc + (r.click_count || 0), 0);
-      totalViews = topResources.reduce((acc, r) => acc + (r.view_count || 0), 0);
+      totalClicks = topResources.reduce((acc, r) => acc + (Number(r.click_count) || 0), 0);
+      totalViews = topResources.reduce((acc, r) => acc + (Number(r.view_count) || 0), 0);
     }
   } catch {}
 
@@ -37,27 +39,27 @@ export default async function AdminAnalyticsPage() {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card>
+        <Card className="shadow-xs">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs">Outbound Clicks</CardDescription>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <CardTitle className="text-2xl font-bold flex items-center gap-2 text-orange-600 dark:text-orange-400">
               <MousePointerClick className="h-5 w-5 text-orange-500" />
-              {totalClicks}
+              🔗 {totalClicks.toLocaleString()}
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card>
+        <Card className="shadow-xs">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs">Catalog Impressions</CardDescription>
             <CardTitle className="text-2xl font-bold flex items-center gap-2">
               <Eye className="h-5 w-5 text-blue-500" />
-              {totalViews}
+              👁️ {totalViews.toLocaleString()}
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card>
+        <Card className="shadow-xs">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs">Conversion Rate</CardDescription>
             <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -67,7 +69,7 @@ export default async function AdminAnalyticsPage() {
           </CardHeader>
         </Card>
 
-        <Card>
+        <Card className="shadow-xs">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs">Redirect Routing</CardDescription>
             <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -78,11 +80,11 @@ export default async function AdminAnalyticsPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="shadow-xs">
         <CardHeader>
           <CardTitle className="text-base">Top Performing Resources</CardTitle>
           <CardDescription className="text-xs">
-            Resources generating the most student engagement and clicks
+            Resources generating the most student engagement, page views, and outbound clicks.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,10 +98,18 @@ export default async function AdminAnalyticsPage() {
                     <div className="text-xs text-zinc-500">/{res.slug}</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs font-medium">
-                  <span className="text-zinc-500">{res.view_count || 0} views</span>
-                  <span className="text-orange-600 dark:text-orange-400 font-semibold">
-                    {res.click_count || 0} clicks
+                <div className="flex items-center gap-2 text-xs">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-md bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300"
+                    title="Total Page Views"
+                  >
+                    👁️ {Number(res.view_count || 0).toLocaleString()} views
+                  </span>
+                  <span
+                    className="inline-flex items-center gap-1 rounded-md bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 text-[11px] font-semibold text-orange-700 dark:text-orange-300"
+                    title="Total Outbound Clicks"
+                  >
+                    🔗 {Number(res.click_count || 0).toLocaleString()} clicks
                   </span>
                 </div>
               </div>

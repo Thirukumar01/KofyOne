@@ -72,6 +72,11 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   let avatarUrl: string | null = null;
   let preferredPlatform = 'microsoft';
   let username: string | null = null;
+  let bio: string | null = null;
+  let themePreference: 'light' | 'dark' | 'system' = 'dark';
+  let sortPref: 'featured' | 'popular' | 'newest' = 'featured';
+  let cardLayoutPref: 'comfortable' | 'compact' = 'comfortable';
+  let roleFocus: 'student' | 'developer' | 'educator' = 'student';
 
   try {
     const supabase = await createClient();
@@ -112,7 +117,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       const { data: profileRow } = await (supabase.from('profiles') as unknown as {
         select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
       })
-        .select('role, full_name, display_name, avatar_url, preferred_platform, username')
+        .select('role, full_name, display_name, avatar_url, bio, preferred_platform, username, theme_preference, resource_sort_preference, card_layout_preference, role_focus')
         .eq('id', user.id)
         .maybeSingle();
       const profileData = profileRow as {
@@ -120,8 +125,13 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
         full_name?: string | null;
         display_name?: string | null;
         avatar_url?: string | null;
+        bio?: string | null;
         preferred_platform?: string | null;
         username?: string | null;
+        theme_preference?: 'light' | 'dark' | 'system';
+        resource_sort_preference?: 'featured' | 'popular' | 'newest';
+        card_layout_preference?: 'comfortable' | 'compact';
+        role_focus?: 'student' | 'developer' | 'educator';
       } | null;
 
       if (profileData) {
@@ -130,8 +140,13 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
         }
         fullName = profileData.full_name || profileData.display_name || fullName;
         avatarUrl = profileData.avatar_url ?? avatarUrl;
+        bio = profileData.bio ?? null;
         preferredPlatform = profileData.preferred_platform ?? preferredPlatform;
         username = profileData.username || (user.user_metadata?.username as string) || null;
+        if (profileData.theme_preference) themePreference = profileData.theme_preference;
+        if (profileData.resource_sort_preference) sortPref = profileData.resource_sort_preference;
+        if (profileData.card_layout_preference) cardLayoutPref = profileData.card_layout_preference;
+        if (profileData.role_focus) roleFocus = profileData.role_focus;
       } else {
         // Profile fallback from user metadata (e.g., OAuth display name)
         fullName = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null;
@@ -157,8 +172,14 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     role,
     username,
     full_name: fullName,
+    display_name: fullName,
     avatar_url: avatarUrl,
+    bio,
     preferred_platform: preferredPlatform,
+    theme_preference: themePreference,
+    resource_sort_preference: sortPref,
+    card_layout_preference: cardLayoutPref,
+    role_focus: roleFocus,
     created_at: user.created_at,
     updated_at: user.updated_at || user.created_at,
   };

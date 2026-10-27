@@ -3,8 +3,27 @@
 import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-export function RecentTracker({ resourceId }: { resourceId: string }) {
+export function RecentTracker({
+  resourceId,
+  resourceSlug,
+}: {
+  resourceId: string;
+  resourceSlug?: string;
+}) {
   useEffect(() => {
+    // 1. Trigger view counter increment API
+    if (resourceSlug) {
+      try {
+        void fetch(`/api/resources/${resourceSlug}/view`, {
+          method: 'POST',
+          keepalive: true,
+        });
+      } catch {
+        // Non-fatal
+      }
+    }
+
+    // 2. Record authenticated recently viewed item in Supabase
     const client = createClient();
     void client.auth.getUser().then(({ data }) => {
       if (!data.user) return;
@@ -15,7 +34,7 @@ export function RecentTracker({ resourceId }: { resourceId: string }) {
           { onConflict: 'user_id,resource_id' }
         );
     });
-  }, [resourceId]);
+  }, [resourceId, resourceSlug]);
 
   return null;
 }

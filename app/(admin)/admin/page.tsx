@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { siteConfig } from '@/config/site';
+import { adminNavGroups } from '@/config/site';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { createClient } from '@/lib/supabase/server';
 import { AdminHeader } from '@/components/admin/admin-header';
@@ -18,22 +18,27 @@ import {
   Settings,
   ArrowUpRight,
   Sparkles,
+  Palette,
+  FileText,
+  Eye,
+  MousePointerClick,
 } from 'lucide-react';
 
-const MODULE_META: Record<
-  string,
-  { icon: typeof Layers; description: string; badge?: string }
-> = {
-  '/admin': { icon: Sparkles, description: 'Overview metrics and system health', badge: 'Active' },
-  '/admin/resources': { icon: Layers, description: 'Manage catalog learning assets and links', badge: '10 Items' },
-  '/admin/platforms': { icon: Compass, description: 'Integrated platforms and partner domains', badge: '1 Platform' },
-  '/admin/categories': { icon: FolderTree, description: 'Curated topics and learning track categories', badge: '5 Tracks' },
-  '/admin/updates': { icon: Bell, description: 'Announcements and platform releases' },
-  '/admin/events': { icon: Calendar, description: 'Hackathons, webinars, and Microsoft workshops' },
-  '/admin/users': { icon: Users, description: 'User roles, profiles, and access control' },
-  '/admin/analytics': { icon: BarChart3, description: 'Redirect telemetry, click counts, and search' },
-  '/admin/audit-logs': { icon: ShieldCheck, description: 'Security audit trail and authorization logs' },
-  '/admin/settings': { icon: Settings, description: 'Environment variables and system configurations' },
+export const dynamic = 'force-dynamic';
+
+const MODULE_ICONS: Record<string, typeof Layers> = {
+  '/admin': Sparkles,
+  '/admin/analytics': BarChart3,
+  '/admin/resources': Layers,
+  '/admin/platforms': Compass,
+  '/admin/categories': FolderTree,
+  '/admin/branding': Palette,
+  '/admin/legal': FileText,
+  '/admin/updates': Bell,
+  '/admin/events': Calendar,
+  '/admin/users': Users,
+  '/admin/audit-logs': ShieldCheck,
+  '/admin/settings': Settings,
 };
 
 export default async function AdminDashboardPage() {
@@ -44,17 +49,25 @@ export default async function AdminDashboardPage() {
   let resourceCount = 10;
   let categoryCount = 5;
   let platformCount = 1;
+  let totalViews = 0;
+  let totalClicks = 0;
 
   try {
     const supabase = await createClient();
-    const [resCount, catCount, platCount] = await Promise.all([
+    const [resCount, catCount, platCount, resStats] = await Promise.all([
       supabase.from('resources').select('*', { count: 'exact', head: true }),
       supabase.from('categories').select('*', { count: 'exact', head: true }),
       supabase.from('platforms').select('*', { count: 'exact', head: true }),
+      supabase.from('resources').select('view_count, click_count'),
     ]);
     if (resCount.count !== null) resourceCount = resCount.count;
     if (catCount.count !== null) categoryCount = catCount.count;
     if (platCount.count !== null) platformCount = platCount.count;
+    if (resStats.data) {
+      const statsRows = resStats.data as unknown as Array<{ view_count?: number; click_count?: number }>;
+      totalViews = statsRows.reduce((acc, r) => acc + (Number(r.view_count) || 0), 0);
+      totalClicks = statsRows.reduce((acc, r) => acc + (Number(r.click_count) || 0), 0);
+    }
   } catch {}
 
   return (
@@ -64,9 +77,9 @@ export default async function AdminDashboardPage() {
         description="Comprehensive management portal for KofyOne catalog content, users, and platform configuration."
       />
 
-      {/* Top Metrics Row */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
+      {/* Top Metrics Row with Views & Clicks Badges */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/70">
           <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Catalog Resources</p>
           <div className="mt-2 flex items-baseline justify-between">
             <span className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">{resourceCount}</span>
@@ -74,27 +87,43 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Learning Tracks</p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/70">
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Total Views</p>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">{categoryCount}</span>
-            <Badge variant="outline">Curated</Badge>
+            <span className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
+              <Eye className="h-4 w-4 text-blue-500" />
+              👁️ {totalViews.toLocaleString()}
+            </span>
+            <span className="text-[10px] text-zinc-400">Impressions</span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Active Platforms</p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/70">
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Total Clicks</p>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">{platformCount}</span>
+            <span className="text-2xl font-extrabold tracking-tight text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+              <MousePointerClick className="h-4 w-4 text-orange-500" />
+              🔗 {totalClicks.toLocaleString()}
+            </span>
+            <span className="text-[10px] text-zinc-400">Referrals</span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/70">
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Platforms & Tracks</p>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+              {platformCount} / {categoryCount}
+            </span>
             <Badge variant="outline">Verified</Badge>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/70">
           <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">System Status</p>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Operational
             </span>
             <Badge variant="outline">Admin</Badge>
@@ -102,59 +131,44 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Main Module Grid */}
-      <div>
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-          Management Modules
-        </h2>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {siteConfig.adminNav
-            .filter((item) => item.href !== '/admin')
-            .map((item) => {
-              const meta = MODULE_META[item.href] || {
-                icon: Layers,
-                description: 'Managed entity module',
-              };
-              const Icon = meta.icon;
+      {/* Main Module Grid Organized by Sections */}
+      <div className="space-y-6">
+        {adminNavGroups.map((group) => (
+          <div key={group.group} className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                {group.group}
+              </h2>
+              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
+            </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="group block focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-2xl"
-                >
-                  <Card className="h-full transition-all duration-200 hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-md dark:hover:border-orange-500/40 cursor-pointer">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400 group-hover:scale-110 transition-transform">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {group.items.map((item) => {
+                const Icon = MODULE_ICONS[item.href] || Layers;
+                return (
+                  <Link key={item.href} href={item.href} className="group">
+                    <Card className="h-full border-zinc-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-500/50 hover:shadow-md dark:border-zinc-800 dark:hover:border-orange-500/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600 group-hover:bg-orange-500 group-hover:text-white dark:bg-orange-950/40 dark:text-orange-400 dark:group-hover:bg-orange-500 dark:group-hover:text-white transition-colors">
                           <Icon className="h-5 w-5" />
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          {meta.badge && (
-                            <Badge variant="outline" className="text-xs">
-                              {meta.badge}
-                            </Badge>
-                          )}
-                          <ArrowUpRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
-                        </div>
-                      </div>
-                      <CardTitle className="text-base mt-3 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                        {item.title}
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        {meta.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-xs text-zinc-500 font-mono">
-                        {item.href}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-        </div>
+                        <ArrowUpRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                      </CardHeader>
+                      <CardContent>
+                        <CardTitle className="text-base font-semibold group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                          {item.title}
+                        </CardTitle>
+                        <CardDescription className="text-xs mt-1">
+                          Manage and configure {item.title.toLowerCase()} settings and resources.
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
