@@ -32,6 +32,9 @@ export function MobileNav({
     profile?.username ||
     (profile?.email ? profile.email.split('@')[0] : '');
 
+  const learnerStage = profile?.learner_role || profile?.role_focus || 'student';
+  const platform = profile?.preferred_platform || 'microsoft';
+
   return (
     <div className="md:hidden">
       <Button
@@ -94,13 +97,24 @@ export function MobileNav({
               <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-col space-y-2 text-sm">
                 <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-zinc-50 dark:bg-zinc-900/60">
                   <PresetAvatar avatarId={profile.avatar_url} size={28} />
-                  <div className="truncate">
+                  <div className="truncate min-w-0 flex-1">
                     <span className="block text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                       {displayName}
                     </span>
                     <span className="block text-[10px] text-zinc-400 truncate">
                       {profile.email}
                     </span>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-zinc-500">
+                      <span className="font-medium text-orange-600 dark:text-orange-400 capitalize">
+                        {learnerStage}
+                      </span>
+                      {platform ? (
+                        <>
+                          <span>•</span>
+                          <span className="capitalize">{platform}</span>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 

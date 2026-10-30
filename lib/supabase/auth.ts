@@ -67,16 +67,20 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const user = await getSessionUser();
   if (!user) return null;
 
-  let role: UserRole = 'student';
-  let fullName: string | null = null;
-  let avatarUrl: string | null = null;
-  let preferredPlatform = 'microsoft';
-  let username: string | null = null;
-  let bio: string | null = null;
-  let themePreference: 'light' | 'dark' | 'system' = 'dark';
-  let sortPref: 'featured' | 'popular' | 'newest' = 'featured';
-  let cardLayoutPref: 'comfortable' | 'compact' = 'comfortable';
-  let roleFocus: 'student' | 'developer' | 'educator' = 'student';
+  const meta = user.user_metadata || {};
+
+  let role: UserRole = (meta.role as UserRole) || 'student';
+  let fullName: string | null = (meta.full_name as string) || (meta.name as string) || (meta.display_name as string) || null;
+  let displayName: string | null = (meta.display_name as string) || (meta.full_name as string) || null;
+  let avatarUrl: string | null = (meta.avatar_url as string) || null;
+  let preferredPlatform = (meta.preferred_platform as string) || 'microsoft';
+  let username: string | null = (meta.username as string) || null;
+  let bio: string | null = (meta.bio as string) || null;
+  let themePreference: 'light' | 'dark' | 'system' = (meta.theme_preference as 'light' | 'dark' | 'system') || 'dark';
+  let sortPref: 'featured' | 'popular' | 'newest' = (meta.default_sort as 'featured' | 'popular' | 'newest') || (meta.resource_sort_preference as 'featured' | 'popular' | 'newest') || 'featured';
+  let cardLayoutPref: 'comfortable' | 'compact' = (meta.card_density as 'comfortable' | 'compact') || (meta.card_layout_preference as 'comfortable' | 'compact') || 'comfortable';
+  let roleFocus: 'student' | 'developer' | 'educator' = (meta.learner_role as 'student' | 'developer' | 'educator') || (meta.role_focus as 'student' | 'developer' | 'educator') || 'student';
+  let learnerRole: 'student' | 'developer' | 'educator' = roleFocus;
 
   try {
     const supabase = await createClient();
@@ -112,14 +116,15 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       }
     }
 
-    // 3. Fetch profile attributes from profiles table (safe column selection without non-existent columns)
+    // 3. Fetch profile attributes from profiles table and merge with auth metadata
     try {
       const { data: profileRow } = await (supabase.from('profiles') as unknown as {
         select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> } };
       })
-        .select('role, full_name, display_name, avatar_url, bio, preferred_platform, username, theme_preference, resource_sort_preference, card_layout_preference, role_focus')
+        .select('role, full_name, display_name, avatar_url, bio, preferred_platform, username, theme_preference, resource_sort_preference, card_layout_preference, role_focus, learner_role, default_sort, card_density')
         .eq('id', user.id)
         .maybeSingle();
+
       const profileData = profileRow as {
         role?: UserRole;
         full_name?: string | null;
@@ -132,6 +137,9 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
         resource_sort_preference?: 'featured' | 'popular' | 'newest';
         card_layout_preference?: 'comfortable' | 'compact';
         role_focus?: 'student' | 'developer' | 'educator';
+        learner_role?: 'student' | 'developer' | 'educator';
+        default_sort?: 'featured' | 'popular' | 'newest';
+        card_density?: 'comfortable' | 'compact';
       } | null;
 
       if (profileData) {
@@ -139,25 +147,28 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
           role = profileData.role;
         }
         fullName = profileData.full_name || profileData.display_name || fullName;
+        displayName = profileData.display_name || profileData.full_name || displayName;
         avatarUrl = profileData.avatar_url ?? avatarUrl;
-        bio = profileData.bio ?? null;
+        bio = profileData.bio ?? bio;
         preferredPlatform = profileData.preferred_platform ?? preferredPlatform;
-        username = profileData.username || (user.user_metadata?.username as string) || null;
+        username = profileData.username || username;
         if (profileData.theme_preference) themePreference = profileData.theme_preference;
-        if (profileData.resource_sort_preference) sortPref = profileData.resource_sort_preference;
-        if (profileData.card_layout_preference) cardLayoutPref = profileData.card_layout_preference;
+        if (profileData.default_sort) sortPref = profileData.default_sort;
+        else if (profileData.resource_sort_preference) sortPref = profileData.resource_sort_preference;
+        if (profileData.card_density) cardLayoutPref = profileData.card_density;
+        else if (profileData.card_layout_preference) cardLayoutPref = profileData.card_layout_preference;
+        if (profileData.learner_role) learnerRole = profileData.learner_role;
         if (profileData.role_focus) roleFocus = profileData.role_focus;
-      } else {
-        // Profile fallback from user metadata (e.g., OAuth display name)
-        fullName = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null;
-        avatarUrl = (user.user_metadata?.avatar_url as string) || null;
-        username = (user.user_metadata?.username as string) || null;
+        if (learnerRole) roleFocus = learnerRole;
       }
     } catch {
       // Safe fallback
     }
 
-    // 4. Verify designated administrator account by verified email
+    // 4. Verify designated administrator account by verified email or metadata
+    if (role !== 'admin' && (meta.role === 'admin' || user.app_metadata?.role === 'admin')) {
+      role = 'admin';
+    }
     const configuredAdminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
     if (user.email && configuredAdminEmail && user.email.toLowerCase() === configuredAdminEmail) {
       role = 'admin';
@@ -172,14 +183,17 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     role,
     username,
     full_name: fullName,
-    display_name: fullName,
+    display_name: displayName || fullName,
     avatar_url: avatarUrl,
     bio,
     preferred_platform: preferredPlatform,
     theme_preference: themePreference,
     resource_sort_preference: sortPref,
+    default_sort: sortPref,
     card_layout_preference: cardLayoutPref,
+    card_density: cardLayoutPref,
     role_focus: roleFocus,
+    learner_role: learnerRole || roleFocus,
     created_at: user.created_at,
     updated_at: user.updated_at || user.created_at,
   };

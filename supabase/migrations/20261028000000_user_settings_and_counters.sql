@@ -17,7 +17,22 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS theme_preference TEXT DEFAULT 'dark',
   ADD COLUMN IF NOT EXISTS resource_sort_preference TEXT DEFAULT 'featured',
   ADD COLUMN IF NOT EXISTS card_layout_preference TEXT DEFAULT 'comfortable',
-  ADD COLUMN IF NOT EXISTS role_focus TEXT DEFAULT 'student';
+  ADD COLUMN IF NOT EXISTS role_focus TEXT DEFAULT 'student',
+  ADD COLUMN IF NOT EXISTS learner_role TEXT DEFAULT 'student',
+  ADD COLUMN IF NOT EXISTS default_sort TEXT DEFAULT 'featured',
+  ADD COLUMN IF NOT EXISTS card_density TEXT DEFAULT 'comfortable';
+
+-- Expand profiles_role_check constraint to accept student, developer, educator, admin, guest
+DO $$
+BEGIN
+  ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+  ALTER TABLE public.profiles
+    ADD CONSTRAINT profiles_role_check
+    CHECK (role IN ('student', 'developer', 'educator', 'admin', 'guest'));
+EXCEPTION
+  WHEN OTHERS THEN
+    NULL;
+END $$;
 
 -- Ensure RLS is active
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -26,22 +41,26 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
 CREATE POLICY "Users can view their own profile"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = id);
+  TO authenticated
+  USING (auth.uid() = id OR public.is_admin());
 
 DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 CREATE POLICY "Users can insert their own profile"
   ON public.profiles FOR INSERT
+  TO authenticated
   WITH CHECK (auth.uid() = id);
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
+  TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
 -- Column-level privileges (no self-updating role or email)
 REVOKE ALL ON public.profiles FROM authenticated;
 GRANT SELECT ON public.profiles TO authenticated;
+GRANT INSERT ON public.profiles TO authenticated;
 GRANT UPDATE (
   full_name,
   display_name,
@@ -51,7 +70,11 @@ GRANT UPDATE (
   theme_preference,
   resource_sort_preference,
   card_layout_preference,
-  role_focus
+  role_focus,
+  learner_role,
+  default_sort,
+  card_density,
+  updated_at
 ) ON public.profiles TO authenticated;
 
 -- -----------------------------------------------------------------------------
@@ -211,3 +234,8 @@ DROP POLICY IF EXISTS "Users can delete their own favorites" ON public.user_favo
 CREATE POLICY "Users can delete their own favorites"
   ON public.user_favorites FOR DELETE
   USING (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
+-- 5. RELOAD POSTGREST SCHEMA CACHE
+-- -----------------------------------------------------------------------------
+NOTIFY pgrst, 'reload schema';

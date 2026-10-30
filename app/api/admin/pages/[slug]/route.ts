@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { getAdminPageBySlug, updateAdminPage, resetPageToDefault } from '@/lib/data/site-pages';
+import { recordAuditLog } from '@/lib/data/audit-logs';
 import { LegalPageSlug } from '@/types/legal';
 
 const VALID_SLUGS: LegalPageSlug[] = ['terms', 'privacy', 'about', 'contact'];
@@ -67,6 +68,14 @@ export async function PUT(
       profile.id
     );
 
+    await recordAuditLog({
+      action: 'update_legal_page',
+      entityType: 'legal_page',
+      entityId: slug,
+      details: { title: title.trim() },
+      actorId: profile.id,
+    });
+
     return NextResponse.json({ success: true, page: updated });
   } catch (err) {
     return NextResponse.json(
@@ -94,6 +103,15 @@ export async function POST(
     const body = await request.json();
     if (body.action === 'reset') {
       const resetPage = await resetPageToDefault(slug as LegalPageSlug, profile.id);
+
+      await recordAuditLog({
+        action: 'reset_legal_page',
+        entityType: 'legal_page',
+        entityId: slug,
+        details: { reset_to_defaults: true },
+        actorId: profile.id,
+      });
+
       return NextResponse.json({ success: true, page: resetPage, message: 'Page restored to default.' });
     }
 

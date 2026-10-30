@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { getResourceByIdOrSlug, updateResourceById, deleteResourceById, getActivePlatforms, getActiveCategories } from '@/lib/supabase/db';
 import { isMicrosoftPlatform } from '@/lib/tracking/url-builder';
+import { recordAuditLog } from '@/lib/data/audit-logs';
 import type { ResourceWithRelations } from '@/types/resource';
 
 export async function GET(
@@ -140,6 +141,14 @@ export async function PUT(
 
     const updatedResource = await updateResourceById(id, updates);
 
+    await recordAuditLog({
+      action: 'update_resource',
+      entityType: 'resource',
+      entityId: id,
+      details: { name: updates.name, platform_id: matchedPlatform.id },
+      actorId: profile.id,
+    });
+
     return NextResponse.json({ success: true, resource: updatedResource });
   } catch (err) {
     console.error('Error updating resource:', err);
@@ -162,6 +171,14 @@ export async function DELETE(
 
     const { id } = await params;
     const deleted = await deleteResourceById(id);
+
+    await recordAuditLog({
+      action: 'delete_resource',
+      entityType: 'resource',
+      entityId: id,
+      details: { deleted: true },
+      actorId: profile.id,
+    });
 
     return NextResponse.json({ success: deleted });
   } catch (err) {

@@ -1,6 +1,6 @@
-import { ResourceWithRelations } from '@/types/resource';
-import { SEED_PLATFORMS } from './seed-platforms';
-import { Category } from '@/types/category';
+import type { ResourceWithRelations } from '../../types/resource.ts';
+import { SEED_PLATFORMS } from './seed-platforms.ts';
+import type { Category } from '../../types/category.ts';
 
 export const SEED_CATEGORIES: Category[] = [
   {
@@ -62,8 +62,8 @@ export const SEED_CATEGORIES: Category[] = [
 
 const msPlatform = SEED_PLATFORMS[0];
 const awsPlatform = SEED_PLATFORMS[1];
-const googlePlatform = SEED_PLATFORMS[2];
-const otherPlatform = SEED_PLATFORMS[3];
+const googlePlatform = SEED_PLATFORMS[2]; // Google Cloud
+const otherPlatform = SEED_PLATFORMS[4]; // Other
 
 const catStudent = SEED_CATEGORIES[0];
 const catAi = SEED_CATEGORIES[1];
@@ -72,6 +72,9 @@ const catDev = SEED_CATEGORIES[3];
 const catProd = SEED_CATEGORIES[4];
 
 export const CANONICAL_SEED_RESOURCES: ResourceWithRelations[] = [
+  // ---------------------------------------------------------------------------
+  // Microsoft Ecosystem
+  // ---------------------------------------------------------------------------
   {
     id: 'seed-ms-1',
     platform_id: msPlatform.id,
@@ -168,25 +171,33 @@ export const CANONICAL_SEED_RESOURCES: ResourceWithRelations[] = [
   {
     id: 'seed-ms-4',
     platform_id: msPlatform.id,
-    name: 'GitHub Student Developer Pack',
-    slug: 'github-student-developer-pack',
-    description: 'The best developer tools, free domains, cloud credits, and subscriptions free for eligible students.',
-    official_url: 'https://education.github.com/pack',
-    logo_url: '/logos/github.svg',
-    featured: true,
+    name: 'Azure OpenAI Service',
+    slug: 'azure-openai-service',
+    description: 'Documentation and sandboxes for building enterprise generative AI solutions with Azure OpenAI Service.',
+    official_url: 'https://learn.microsoft.com/azure/ai-services/openai/',
+    logo_url: '/logos/azure-ai.svg',
+    featured: false,
     is_published: true,
     display_order: 4,
     tracking_config_id: null,
-    view_count: 3200,
-    click_count: 1450,
-    contributor_id: null,
-    tags: ['tools', 'github', 'student-pack'],
+    view_count: 1120,
+    click_count: 490,
+    contributor_id: 'studentamb_504640',
+    tags: ['ai', 'openai', 'azure'],
     metadata: { is_free: true },
     created_at: '2026-10-04T00:00:00.000Z',
     updated_at: '2026-10-04T00:00:00.000Z',
     platform: msPlatform,
-    tracking_config: null,
-    categories: [catStudent, catDev],
+    tracking_config: {
+      id: 'tc-ms',
+      platform_id: msPlatform.id,
+      tracking_parameter: 'wt.mc_id',
+      tracking_value: 'studentamb_504640',
+      is_enabled: true,
+      created_at: '2026-10-04T00:00:00.000Z',
+      updated_at: '2026-10-04T00:00:00.000Z',
+    },
+    categories: [catAi],
   },
   {
     id: 'seed-ms-5',
@@ -242,17 +253,44 @@ export const CANONICAL_SEED_RESOURCES: ResourceWithRelations[] = [
     tracking_config: null,
     categories: [catDev],
   },
+
+  // ---------------------------------------------------------------------------
+  // AWS Ecosystem
+  // ---------------------------------------------------------------------------
   {
     id: 'seed-aws-1',
     platform_id: awsPlatform.id,
-    name: 'AWS Skill Builder',
-    slug: 'aws-skill-builder',
-    description: 'Over 600+ free digital courses, learning plans, and AWS certification prep for students and builders.',
-    official_url: 'https://skillbuilder.aws/',
+    name: 'AWS Educate',
+    slug: 'aws-educate',
+    description: 'Free cloud learning content, training pathways, and AWS credits designed specifically for students aged 13+.',
+    official_url: 'https://aws.amazon.com/education/awseducate/',
     logo_url: null,
     featured: true,
     is_published: true,
     display_order: 7,
+    tracking_config_id: null,
+    view_count: 1250,
+    click_count: 610,
+    contributor_id: null,
+    tags: ['aws', 'educate', 'students', 'cloud'],
+    metadata: { is_free: true, difficulty: 'beginner' },
+    created_at: '2026-10-23T00:00:00.000Z',
+    updated_at: '2026-10-23T00:00:00.000Z',
+    platform: awsPlatform,
+    tracking_config: null,
+    categories: [catStudent, catCloud],
+  },
+  {
+    id: 'seed-aws-2',
+    platform_id: awsPlatform.id,
+    name: 'AWS Skill Builder',
+    slug: 'aws-skill-builder',
+    description: 'Over 600+ free digital courses, learning plans, and AWS certification prep for students and builders.',
+    official_url: 'https://explore.skillbuilder.aws/',
+    logo_url: null,
+    featured: true,
+    is_published: true,
+    display_order: 8,
     tracking_config_id: null,
     view_count: 980,
     click_count: 420,
@@ -263,8 +301,35 @@ export const CANONICAL_SEED_RESOURCES: ResourceWithRelations[] = [
     updated_at: '2026-10-23T00:00:00.000Z',
     platform: awsPlatform,
     tracking_config: null,
-    categories: [catCloud, catDev],
+    categories: [catCloud, catDev, catAi],
   },
+  {
+    id: 'seed-aws-3',
+    platform_id: awsPlatform.id,
+    name: 'Amazon Q Developer',
+    slug: 'amazon-q-developer',
+    description: 'Generative AI assistant for software development with code suggestions, security scans, and software upgrades.',
+    official_url: 'https://aws.amazon.com/q/developer/',
+    logo_url: null,
+    featured: true,
+    is_published: true,
+    display_order: 9,
+    tracking_config_id: null,
+    view_count: 840,
+    click_count: 390,
+    contributor_id: null,
+    tags: ['aws', 'amazon-q', 'generative-ai', 'assistant'],
+    metadata: { is_free: true, difficulty: 'all-levels' },
+    created_at: '2026-10-23T00:00:00.000Z',
+    updated_at: '2026-10-23T00:00:00.000Z',
+    platform: awsPlatform,
+    tracking_config: null,
+    categories: [catAi, catDev, catProd],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Google Cloud Ecosystem
+  // ---------------------------------------------------------------------------
   {
     id: 'seed-google-1',
     platform_id: googlePlatform.id,
@@ -275,7 +340,7 @@ export const CANONICAL_SEED_RESOURCES: ResourceWithRelations[] = [
     logo_url: null,
     featured: true,
     is_published: true,
-    display_order: 8,
+    display_order: 10,
     tracking_config_id: null,
     view_count: 1150,
     click_count: 510,
@@ -286,29 +351,102 @@ export const CANONICAL_SEED_RESOURCES: ResourceWithRelations[] = [
     updated_at: '2026-10-23T00:00:00.000Z',
     platform: googlePlatform,
     tracking_config: null,
-    categories: [catCloud, catAi],
+    categories: [catStudent, catCloud, catAi],
   },
+  {
+    id: 'seed-google-2',
+    platform_id: googlePlatform.id,
+    name: 'Google AI Studio & Gemini API',
+    slug: 'google-ai-studio-gemini-api',
+    description: 'Fastest way to prototype and experiment with Google Gemini multimodal models, prompt engineering, and developer APIs.',
+    official_url: 'https://aistudio.google.com/',
+    logo_url: null,
+    featured: true,
+    is_published: true,
+    display_order: 11,
+    tracking_config_id: null,
+    view_count: 1320,
+    click_count: 670,
+    contributor_id: null,
+    tags: ['google', 'gemini', 'ai-studio', 'api'],
+    metadata: { is_free: true, difficulty: 'intermediate' },
+    created_at: '2026-10-23T00:00:00.000Z',
+    updated_at: '2026-10-23T00:00:00.000Z',
+    platform: googlePlatform,
+    tracking_config: null,
+    categories: [catAi, catDev],
+  },
+  {
+    id: 'seed-google-3',
+    platform_id: googlePlatform.id,
+    name: 'Google for Developers — Student Programs',
+    slug: 'google-for-developers-student-programs',
+    description: 'Student clubs, Solution Challenge hackathons, campus leads, and developer learning pathways.',
+    official_url: 'https://developers.google.com/community/gdsc',
+    logo_url: null,
+    featured: false,
+    is_published: true,
+    display_order: 12,
+    tracking_config_id: null,
+    view_count: 760,
+    click_count: 310,
+    contributor_id: null,
+    tags: ['google', 'community', 'gdsc', 'students'],
+    metadata: { is_free: true, difficulty: 'all-levels' },
+    created_at: '2026-10-23T00:00:00.000Z',
+    updated_at: '2026-10-23T00:00:00.000Z',
+    platform: googlePlatform,
+    tracking_config: null,
+    categories: [catStudent, catDev],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Other / Independent Ecosystems
+  // ---------------------------------------------------------------------------
   {
     id: 'seed-other-1',
     platform_id: otherPlatform.id,
     name: 'GitHub Student Developer Pack',
     slug: 'github-student-developer-pack',
-    description: 'Free access to the best developer tools, cloud credits, and learning platforms for verified students.',
+    description: 'The best developer tools, free domains, cloud credits, and subscriptions free for eligible students.',
     official_url: 'https://education.github.com/pack',
-    logo_url: null,
+    logo_url: '/logos/github.svg',
     featured: true,
     is_published: true,
-    display_order: 9,
+    display_order: 13,
     tracking_config_id: null,
-    view_count: 1800,
-    click_count: 950,
+    view_count: 3200,
+    click_count: 1450,
     contributor_id: null,
-    tags: ['github', 'developer-pack', 'student-benefits'],
+    tags: ['tools', 'github', 'student-pack'],
+    metadata: { is_free: true },
+    created_at: '2026-10-04T00:00:00.000Z',
+    updated_at: '2026-10-04T00:00:00.000Z',
+    platform: otherPlatform,
+    tracking_config: null,
+    categories: [catStudent, catDev, catProd],
+  },
+  {
+    id: 'seed-other-2',
+    platform_id: otherPlatform.id,
+    name: 'GitHub Copilot for Students',
+    slug: 'github-copilot-for-students',
+    description: 'Free AI pair programmer for verified students to accelerate coding, tests, and debugging directly in IDEs.',
+    official_url: 'https://github.com/features/copilot',
+    logo_url: '/logos/github.svg',
+    featured: true,
+    is_published: true,
+    display_order: 14,
+    tracking_config_id: null,
+    view_count: 2200,
+    click_count: 1150,
+    contributor_id: null,
+    tags: ['ai', 'copilot', 'github', 'ide'],
     metadata: { is_free: true },
     created_at: '2026-10-23T00:00:00.000Z',
     updated_at: '2026-10-23T00:00:00.000Z',
     platform: otherPlatform,
     tracking_config: null,
-    categories: [catStudent, catDev, catProd],
+    categories: [catAi, catDev, catProd],
   },
 ];

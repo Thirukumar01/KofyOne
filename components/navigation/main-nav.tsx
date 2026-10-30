@@ -1,12 +1,14 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/config/site';
 import { cn } from '@/lib/utils';
+import type { UserProfile } from '@/types/user';
 
-export function MainNav() {
+export function MainNav(props: { profile?: UserProfile | null } = {}) {
   const pathname = usePathname();
+  void props.profile;
 
   return (
     <nav className="hidden md:flex items-center gap-6 text-sm font-medium" aria-label="Main Navigation">

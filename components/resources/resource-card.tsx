@@ -12,11 +12,14 @@ import type { ResourceWithRelations } from '@/types/resource';
 
 export function ResourceCard({
   resource,
-  layout = 'comfortable',
+  layout,
+  density = 'comfortable',
 }: {
   resource: ResourceWithRelations;
   layout?: 'comfortable' | 'compact';
+  density?: 'comfortable' | 'compact';
 }) {
+  const activeDensity = layout || density;
   const views = Number(resource.view_count || 0);
   const clicks = Number(resource.click_count || 0);
 
@@ -24,7 +27,7 @@ export function ResourceCard({
     <Card
       className={cn(
         'group flex flex-col justify-between border-zinc-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:hover:border-zinc-700',
-        layout === 'compact' ? 'gap-1' : ''
+        activeDensity === 'compact' ? 'gap-1 p-3' : ''
       )}
     >
       <CardHeader className="space-y-3 pb-3">

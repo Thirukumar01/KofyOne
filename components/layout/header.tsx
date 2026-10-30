@@ -28,7 +28,7 @@ export async function Header() {
           <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
             <BrandingLogo branding={branding} variant="primary" />
           </Link>
-          <MainNav />
+          <MainNav profile={profile} />
         </div>
 
         <div className="flex items-center gap-3">

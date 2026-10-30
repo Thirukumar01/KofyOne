@@ -2,7 +2,7 @@
  * KofyOne - User & Profile Domain Types
  */
 
-export type UserRole = 'student' | 'educator' | 'admin' | 'guest';
+export type UserRole = 'student' | 'educator' | 'admin' | 'guest' | 'developer';
 
 export interface UserProfile {
   id: string;
@@ -18,6 +18,9 @@ export interface UserProfile {
   resource_sort_preference?: 'featured' | 'popular' | 'newest' | null;
   card_layout_preference?: 'comfortable' | 'compact' | null;
   role_focus?: 'student' | 'developer' | 'educator' | null;
+  learner_role?: 'student' | 'developer' | 'educator' | null;
+  default_sort?: 'featured' | 'popular' | 'newest' | null;
+  card_density?: 'comfortable' | 'compact' | null;
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +37,9 @@ export type UpdateUserProfileInput = Partial<
     | 'resource_sort_preference'
     | 'card_layout_preference'
     | 'role_focus'
+    | 'learner_role'
+    | 'default_sort'
+    | 'card_density'
   >
 >;
 

@@ -1,21 +1,31 @@
 import Link from 'next/link';
 import { Search, Filter } from 'lucide-react';
 import { getActiveCategories, getActivePlatforms, getPublishedResources } from '@/lib/supabase/db';
+import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ErrorState } from '@/components/shared/error-state';
 import { ResourceCard } from '@/components/resources/resource-card';
+import { EcosystemBanner } from '@/components/resources/ecosystem-banner';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function ResourcesPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
+  const profile = await getCurrentUserProfile();
+
   const query = typeof params.q === 'string' ? params.q.trim().toLowerCase() : '';
   const provider = typeof params.provider === 'string' ? params.provider.trim().toLowerCase() : '';
   const category = typeof params.category === 'string' ? params.category.trim().toLowerCase() : '';
-  const sort = typeof params.sort === 'string' ? params.sort : 'featured';
+
+  // Personalized discovery preferences from user profile
+  const userDefaultSort = profile?.default_sort || profile?.resource_sort_preference || 'featured';
+  const sort = typeof params.sort === 'string' ? params.sort : userDefaultSort;
+  const density: 'comfortable' | 'compact' = profile?.card_density || profile?.card_layout_preference || 'comfortable';
+  const preferredPlatform = profile?.preferred_platform || null;
+
   const page = Math.max(1, Number(params.page ?? 1) || 1);
   const limit = Math.min(24, Math.max(1, Number(params.limit ?? 12) || 12));
 
@@ -29,7 +39,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
     getActivePlatforms(),
   ]);
 
-  // Graceful degradation: only display full error state if no resources could be loaded (neither from DB nor canonical fallback)
+  // Graceful degradation: only display full error state if no resources could be loaded
   const error = resources.length === 0 ? (resourceError ?? categoryError) : null;
 
   // Filter resources: must be strictly published, and match query, provider, category
@@ -41,7 +51,16 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
     if (provider && provider !== 'all') {
       const pSlug = resource.platform?.slug?.toLowerCase() || '';
       const pName = resource.platform?.name?.toLowerCase() || '';
-      if (pSlug !== provider && pName !== provider) return false;
+      const isMatch =
+        pSlug === provider ||
+        pName === provider ||
+        ((provider === 'google-cloud' || provider === 'google') &&
+          (pSlug === 'google-cloud' || pSlug === 'google' || pName.includes('google'))) ||
+        (provider === 'aws' && (pSlug === 'aws' || pName.includes('aws'))) ||
+        (provider === 'microsoft' && (pSlug === 'microsoft' || pName.includes('microsoft'))) ||
+        (provider === 'other' && (pSlug === 'other' || pName.includes('other')));
+
+      if (!isMatch) return false;
     }
 
     // 3. Category filter
@@ -68,6 +87,11 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
   });
 
   const sorted = [...filtered].sort((a, b) => {
+    if (sort === 'popular') {
+      const engagementB = Number(b.click_count || 0) * 2 + Number(b.view_count || 0);
+      const engagementA = Number(a.click_count || 0) * 2 + Number(a.view_count || 0);
+      return engagementB - engagementA;
+    }
     if (sort === 'newest') return b.created_at.localeCompare(a.created_at);
     if (sort === 'alphabetical') return a.name.localeCompare(b.name);
     return Number(b.featured) - Number(a.featured) || a.display_order - b.display_order;
@@ -89,9 +113,29 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
           <span className="text-xs text-zinc-500 font-medium">({filtered.length} available)</span>
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-2xl">
-          Discover student offers, free cloud sandboxes, developer tools, AI platforms, and certifications across Microsoft, AWS, Google, and top tech ecosystems.
+          Discover student offers, free cloud sandboxes, developer tools, AI platforms, and certifications across Microsoft, AWS, Google Cloud, and top tech ecosystems.
         </p>
       </div>
+
+      {/* Personalized Ecosystem Recommendation Banner */}
+      {preferredPlatform && (
+        <EcosystemBanner
+          preferredPlatform={preferredPlatform}
+          currentProvider={provider}
+          matchedCount={
+            resources.filter((r) => {
+              const pSlug = r.platform?.slug?.toLowerCase() || '';
+              const pName = r.platform?.name?.toLowerCase() || '';
+              const pref = preferredPlatform.toLowerCase();
+              return (
+                pSlug.includes(pref) ||
+                pName.includes(pref) ||
+                (pref.includes('google') && (pSlug.includes('google') || pName.includes('google')))
+              );
+            }).length
+          }
+        />
+      )}
 
       {/* Provider Quick Pills */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -113,28 +157,37 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
           All Providers ({resources.length})
         </Link>
 
-        {platforms.map((p) => {
-          const count = resources.filter((r) => r.platform?.slug === p.slug).length;
-          const isSelected = provider === p.slug;
-          return (
-            <Link
-              key={p.slug}
-              href={`/resources?${new URLSearchParams({
-                provider: p.slug,
-                ...(query ? { q: query } : {}),
-                ...(category ? { category } : {}),
-                sort,
-              }).toString()}`}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap ${
-                isSelected
-                  ? 'bg-orange-600 text-white font-semibold'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
-              }`}
-            >
-              {p.name} {count > 0 && `(${count})`}
-            </Link>
-          );
-        })}
+        {platforms
+          .filter((p) => p.slug !== 'google' || !platforms.some((pl) => pl.slug === 'google-cloud'))
+          .map((p) => {
+            const count = resources.filter(
+              (r) =>
+                r.platform?.slug === p.slug ||
+                (p.slug === 'google-cloud' && (r.platform?.slug === 'google' || r.platform?.slug === 'google-cloud'))
+            ).length;
+            const isSelected =
+              provider === p.slug ||
+              (p.slug === 'google-cloud' && provider === 'google');
+
+            return (
+              <Link
+                key={p.slug}
+                href={`/resources?${new URLSearchParams({
+                  provider: p.slug,
+                  ...(query ? { q: query } : {}),
+                  ...(category ? { category } : {}),
+                  sort,
+                }).toString()}`}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap ${
+                  isSelected
+                    ? 'bg-orange-600 text-white font-semibold'
+                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                }`}
+              >
+                {p.name} {count > 0 && `(${count})`}
+              </Link>
+            );
+          })}
       </div>
 
       {/* Search & Filter Form */}
@@ -174,6 +227,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
             className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-xs text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 sm:w-36"
           >
             <option value="featured">Featured First</option>
+            <option value="popular">Most Popular</option>
             <option value="newest">Newest</option>
             <option value="alphabetical">A–Z</option>
           </select>
@@ -213,14 +267,28 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
         />
       ) : (
         <>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className={
+              density === 'compact'
+                ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-4'
+                : 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3'
+            }
+          >
             {visible.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                layout={density}
+                density={density}
+              />
             ))}
           </div>
 
           {/* Pagination */}
-          <nav aria-label="Resource pages" className="flex items-center justify-between text-sm pt-4 border-t border-zinc-200 dark:border-zinc-800">
+          <nav
+            aria-label="Resource pages"
+            className="flex items-center justify-between text-sm pt-4 border-t border-zinc-200 dark:border-zinc-800"
+          >
             <span className="text-xs text-zinc-500">
               Page {currentPage} of {totalPages} ({filtered.length} total)
             </span>

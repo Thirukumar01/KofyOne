@@ -1,103 +1,108 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { AdminHeader } from '@/components/admin/admin-header';
 import { Badge } from '@/components/ui/badge';
-import { Shield, User } from 'lucide-react';
+import { UsersDirectory, AdminUserItem } from '@/components/admin/users-directory';
 
-interface UserProfileRow {
-  id: string;
-  email: string | null;
-  role: string;
-  full_name: string | null;
-  created_at?: string;
-}
+export const dynamic = 'force-dynamic';
 
 export default async function AdminUsersPage() {
   const profile = await getCurrentUserProfile();
   if (!profile) redirect('/login?next=/admin/users');
   if (profile.role !== 'admin') redirect('/');
 
-  let users: UserProfileRow[] = [];
+  let users: AdminUserItem[] = [];
+
   try {
     const supabase = await createClient();
-    const { data } = await supabase.from('profiles').select('id, email, role, full_name');
-    if (data && data.length > 0) {
-      users = data as unknown as UserProfileRow[];
-    }
-  } catch {}
+    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : null;
+    const client = adminClient || supabase;
 
-  // Guarantee the current admin user is listed
-  if (!users.some((u) => u.email === profile.email)) {
+    // Fetch registered profiles
+    const { data: rawProfiles } = await client
+      .from('profiles')
+      .select('id, email, role, full_name, display_name, username, avatar_url, learner_role, preferred_platform, created_at')
+      .order('created_at', { ascending: false });
+
+    // Fetch user roles to guarantee authoritative synchronization
+    const { data: rawRoles } = await client
+      .from('user_roles')
+      .select('user_id, role');
+
+    const roleMap = new Map<string, string>();
+    if (rawRoles) {
+      const roles = rawRoles as unknown as Array<{ user_id: string; role: string }>;
+      for (const r of roles) {
+        roleMap.set(r.user_id, r.role);
+      }
+    }
+
+    if (rawProfiles && rawProfiles.length > 0) {
+      const profilesData = rawProfiles as unknown as Array<{
+        id: string;
+        email: string | null;
+        role: string;
+        full_name: string | null;
+        display_name?: string | null;
+        username?: string | null;
+        avatar_url?: string | null;
+        learner_role?: string | null;
+        preferred_platform?: string | null;
+        created_at?: string;
+      }>;
+
+      users = profilesData.map((p) => ({
+        id: p.id,
+        email: p.email,
+        role: roleMap.get(p.id) || p.role || 'student',
+        full_name: p.full_name,
+        display_name: p.display_name,
+        username: p.username,
+        avatar_url: p.avatar_url,
+        learner_role: p.learner_role || 'student',
+        preferred_platform: p.preferred_platform || 'Microsoft',
+        created_at: p.created_at,
+      }));
+    }
+  } catch (err) {
+    console.warn('[AdminUsers] Failed to fetch users:', err);
+  }
+
+  // Guarantee the current admin user is present
+  if (!users.some((u) => u.id === profile.id || u.email === profile.email)) {
     users.unshift({
       id: profile.id,
       email: profile.email,
       role: 'admin',
       full_name: profile.full_name || 'System Administrator',
+      display_name: profile.display_name || 'Admin',
+      username: profile.username || 'admin',
+      avatar_url: profile.avatar_url || 'avatar-student-1',
+      learner_role: profile.learner_role || 'developer',
+      preferred_platform: profile.preferred_platform || 'Microsoft',
+      created_at: profile.created_at || new Date().toISOString(),
     });
   }
+
+  const adminCount = users.filter((u) => u.role === 'admin').length;
+  const studentCount = users.length - adminCount;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       <AdminHeader
         title="User Roles & Access Control"
-        description="Manage user profiles, permissions, and administrator authorizations."
+        description="Manage user profiles, learner stages, preferred ecosystems, and system administrator access."
       />
 
       <div className="flex items-center gap-2">
         <Badge variant="brand">{users.length} Users Registered</Badge>
-        <Badge variant="outline">
-          {users.filter((u) => u.role === 'admin').length} Administrator
-        </Badge>
+        <Badge variant="outline">{adminCount} Administrators</Badge>
+        <Badge variant="outline">{studentCount} Students & Learners</Badge>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50/75 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-400">
-            <tr>
-              <th className="px-6 py-4">User</th>
-              <th className="px-6 py-4">Role</th>
-              <th className="px-6 py-4">Permissions</th>
-              <th className="px-6 py-4 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-medium text-xs">
-                      {u.role === 'admin' ? <Shield className="h-4 w-4 text-orange-600" /> : <User className="h-4 w-4" />}
-                    </div>
-                    <div>
-                      <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {u.full_name || 'Platform User'}
-                      </div>
-                      <div className="text-xs text-zinc-500">{u.email || 'No email attached'}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <Badge variant={u.role === 'admin' ? 'brand' : 'outline'} className="capitalize">
-                    {u.role}
-                  </Badge>
-                </td>
-                <td className="px-6 py-4 text-xs text-zinc-500">
-                  {u.role === 'admin'
-                    ? 'Full Administrator Access (Catalog, Users, Settings)'
-                    : 'Standard User (Favorites, History, Discovery)'}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    Active
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <UsersDirectory initialUsers={users} currentAdminId={profile.id} />
     </div>
   );
 }

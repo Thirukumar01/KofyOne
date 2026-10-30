@@ -87,6 +87,14 @@ describe('1. Curated Preset Avatars & Security Guardrails', () => {
     assert.ok(updateRouteContent.includes('isValidPresetAvatar'));
     assert.ok(updateRouteContent.includes('Custom image URLs and file uploads are disabled'));
   });
+
+  test('profile API routes update user metadata and preserve admin role', () => {
+    const routeContent = fs.readFileSync(path.resolve('app/api/profile/route.ts'), 'utf8');
+    assert.ok(routeContent.includes('supabase.auth.updateUser'), 'Must update auth user metadata');
+    assert.ok(routeContent.includes('isUserAdmin'), 'Must verify admin status');
+    assert.ok(routeContent.includes('learner_role'), 'Must support learner_role');
+    assert.ok(routeContent.includes('createAdminClient'), 'Must support admin client with service role key');
+  });
 });
 
 describe('2. Global Theme Toggle Engine & CSS Tokens', () => {
@@ -167,6 +175,15 @@ describe('3. Database Migration & Counter RPC Security Inspection', () => {
     const content = fs.readFileSync(migrationPath, 'utf8');
     assert.ok(content.includes('Users can delete their own recently viewed'));
     assert.ok(content.includes('Users can delete their own favorites'));
+  });
+
+  test('defines expanded profiles_role_check, RLS policies, and NOTIFY reload schema', () => {
+    const content = fs.readFileSync(migrationPath, 'utf8');
+    assert.ok(content.includes('profiles_role_check'), 'Must declare profiles_role_check constraint');
+    assert.ok(content.includes('developer'), 'Must include developer in role constraint');
+    assert.ok(content.includes('Users can insert their own profile'), 'Must include INSERT RLS policy');
+    assert.ok(content.includes('Users can update their own profile'), 'Must include UPDATE RLS policy');
+    assert.ok(content.includes("NOTIFY pgrst, 'reload schema';"), 'Must reload PostgREST schema cache');
   });
 });
 

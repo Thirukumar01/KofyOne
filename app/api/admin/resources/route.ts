@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { saveCustomResource } from '@/lib/data/custom-resources';
 import { getActiveCategories, getActivePlatforms, getAllAdminResources } from '@/lib/supabase/db';
 import { isMicrosoftPlatform } from '@/lib/tracking/url-builder';
+import { recordAuditLog } from '@/lib/data/audit-logs';
 import type { ResourceWithRelations } from '@/types/resource';
 
 function slugify(text: string) {
@@ -142,6 +143,14 @@ export async function POST(request: Request) {
 
     // Save to custom resources storage
     saveCustomResource(newResource);
+
+    await recordAuditLog({
+      action: 'create_resource',
+      entityType: 'resource',
+      entityId: newResource.slug,
+      details: { name: newResource.name, platform: matchedPlatform.name },
+      actorId: profile.id,
+    });
 
     // Also attempt Supabase insert if DB is connected
     try {

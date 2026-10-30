@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { getSiteBranding, updateSiteBranding, resetSiteBranding } from '@/lib/data/site-branding';
+import { recordAuditLog } from '@/lib/data/audit-logs';
 
 export async function GET() {
   try {
@@ -45,6 +46,14 @@ export async function POST(request: Request) {
       profile.id
     );
 
+    await recordAuditLog({
+      action: 'update_site_branding',
+      entityType: 'site_branding',
+      entityId: 'current',
+      details: { app_name, tagline, description },
+      actorId: profile.id,
+    });
+
     return NextResponse.json({ success: true, branding: updated });
   } catch (err) {
     console.error('Error updating site branding:', err);
@@ -63,6 +72,15 @@ export async function DELETE() {
     }
 
     const reset = await resetSiteBranding(profile.id);
+
+    await recordAuditLog({
+      action: 'reset_site_branding',
+      entityType: 'site_branding',
+      entityId: 'current',
+      details: { reset_to_defaults: true },
+      actorId: profile.id,
+    });
+
     return NextResponse.json({ success: true, branding: reset });
   } catch (err) {
     return NextResponse.json(

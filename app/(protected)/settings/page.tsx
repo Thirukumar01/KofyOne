@@ -101,10 +101,12 @@ function SettingsContent() {
           setDisplayName(p.display_name || p.full_name || '');
           setSelectedAvatarId(p.avatar_url || 'avatar-student-1');
           setBio(p.bio || '');
-          setRoleFocus(p.role_focus || 'student');
+          setRoleFocus((p.learner_role || p.role_focus || 'student') as 'student' | 'developer' | 'educator');
           setPreferredPlatform(p.preferred_platform || 'microsoft');
-          if (p.resource_sort_preference) setResourceSort(p.resource_sort_preference);
-          if (p.card_layout_preference) setCardLayout(p.card_layout_preference);
+          if (p.default_sort) setResourceSort(p.default_sort as typeof resourceSort);
+          else if (p.resource_sort_preference) setResourceSort(p.resource_sort_preference as typeof resourceSort);
+          if (p.card_density) setCardLayout(p.card_density as typeof cardLayout);
+          else if (p.card_layout_preference) setCardLayout(p.card_layout_preference as typeof cardLayout);
         }
         if (data.stats) {
           setFavoritesCount(data.stats.favoritesCount || 0);
@@ -132,8 +134,10 @@ function SettingsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           display_name: displayName,
+          full_name: displayName,
           avatar_url: selectedAvatarId,
           bio,
+          learner_role: roleFocus,
           role_focus: roleFocus,
           preferred_platform: preferredPlatform,
         }),
@@ -150,6 +154,7 @@ function SettingsContent() {
           avatar_url: selectedAvatarId,
           bio,
           role_focus: roleFocus,
+          learner_role: roleFocus,
           preferred_platform: preferredPlatform,
         });
       }
@@ -176,7 +181,9 @@ function SettingsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           theme_preference: theme,
+          default_sort: resourceSort,
           resource_sort_preference: resourceSort,
+          card_density: cardLayout,
           card_layout_preference: cardLayout,
         }),
       });
@@ -184,6 +191,16 @@ function SettingsContent() {
       if (!res.ok) throw new Error(data.error || 'Failed to save preferences');
 
       setPrefMessage({ type: 'success', text: 'Preferences updated and applied.' });
+      if (profile) {
+        setProfile({
+          ...profile,
+          theme_preference: theme,
+          default_sort: resourceSort,
+          resource_sort_preference: resourceSort,
+          card_density: cardLayout,
+          card_layout_preference: cardLayout,
+        });
+      }
     } catch (err) {
       setPrefMessage({
         type: 'error',

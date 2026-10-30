@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { getAdminSettings, saveAdminSettings } from '@/lib/data/admin-settings';
 import { createClient } from '@/lib/supabase/server';
+import { recordAuditLog } from '@/lib/data/audit-logs';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +71,13 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const updated = await saveAdminSettings(body);
+
+    await recordAuditLog({
+      action: 'update_admin_settings',
+      entityType: 'settings',
+      details: { updated_by: profile.email },
+      actorId: profile.id,
+    });
 
     return NextResponse.json({
       success: true,
