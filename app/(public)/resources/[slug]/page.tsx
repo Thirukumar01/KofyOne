@@ -107,6 +107,13 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
             href={`/go/${resource.slug}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              try {
+                fetch(`/api/resources/${resource.slug}/track`, { method: 'POST', keepalive: true });
+              } catch {
+                // non-blocking
+              }
+            }}
             className="inline-flex"
           >
             <Button size="lg" className="shadow-sm gap-2 bg-[#B94A50] hover:bg-[#A13D43] text-white dark:text-[#F6F5F3]">

@@ -23,13 +23,41 @@ export async function POST(
 
   try {
     // 1. Increment view counter via SECURITY DEFINER stored procedure
-    const { data: rpcCount, error: rpcError } = await (supabase.rpc as unknown as (
-      fn: string,
-      args: { resource_slug: string }
-    ) => Promise<{ data: number | null; error: unknown }>)(
-      'increment_resource_view',
-      { resource_slug: slug }
-    );
+    // Supports both p_identifier (new) and resource_slug (legacy) signatures
+    let rpcCount: number | null = null;
+    let rpcError: unknown = null;
+
+    try {
+      const res = await (supabase.rpc as unknown as (
+        fn: string,
+        args: { p_identifier: string }
+      ) => Promise<{ data: number | null; error: unknown }>)(
+        'increment_resource_view',
+        { p_identifier: slug }
+      );
+      rpcCount = res.data;
+      rpcError = res.error;
+    } catch (e) {
+      rpcError = e;
+    }
+
+    if (rpcError || rpcCount === null) {
+      try {
+        const legacyRes = await (supabase.rpc as unknown as (
+          fn: string,
+          args: { resource_slug: string }
+        ) => Promise<{ data: number | null; error: unknown }>)(
+          'increment_resource_view',
+          { resource_slug: slug }
+        );
+        if (!legacyRes.error && typeof legacyRes.data === 'number') {
+          rpcCount = legacyRes.data;
+          rpcError = null;
+        }
+      } catch {
+        // Fall back to direct update
+      }
+    }
 
     if (!rpcError && typeof rpcCount === 'number') {
       newCount = rpcCount;
@@ -48,29 +76,40 @@ export async function POST(
         await (supabase.from('resources') as unknown as {
           update: (vals: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
         })
-          .update({ view_count: newCount, updated_at: new Date().toISOString() })
+          .update({ view_count: newCount, views_count: newCount, updated_at: new Date().toISOString() })
           .eq('id', resource.id);
       }
     }
 
-    // 2. If user is authenticated, record recently viewed item
+    // 2. If user is authenticated, record recently viewed item in user_recently_viewed
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (user) {
-      const { data: resData } = await getPublishedResourceBySlug(slug);
-      if (resData?.id) {
-        await (supabase.from('user_recently_viewed') as unknown as {
-          upsert: (vals: Record<string, unknown>, opts: { onConflict: string }) => Promise<unknown>;
-        }).upsert(
-          {
-            user_id: user.id,
-            resource_id: resData.id,
-            viewed_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id,resource_id' }
+      try {
+        await (supabase.rpc as unknown as (
+          fn: string,
+          args: { p_identifier: string }
+        ) => Promise<unknown>)(
+          'record_resource_view_history',
+          { p_identifier: slug }
         );
+      } catch {
+        // Direct upsert fallback
+        const { data: resData } = await getPublishedResourceBySlug(slug);
+        if (resData?.id) {
+          await (supabase.from('user_recently_viewed') as unknown as {
+            upsert: (vals: Record<string, unknown>, opts: { onConflict: string }) => Promise<unknown>;
+          }).upsert(
+            {
+              user_id: user.id,
+              resource_id: resData.id,
+              viewed_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,resource_id' }
+          );
+        }
       }
     }
 

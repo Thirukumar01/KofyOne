@@ -5,6 +5,8 @@ import { getSessionUser } from '@/lib/supabase/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/empty-state';
 
+export const dynamic = 'force-dynamic';
+
 export default async function RecentPage() {
   const user = await getSessionUser();
   if (!user) redirect('/login?next=/recent');

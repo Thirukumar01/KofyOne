@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { getResourceByIdOrSlug, updateResourceById, deleteResourceById, getActivePlatforms, getActiveCategories } from '@/lib/supabase/db';
 import { isMicrosoftPlatform } from '@/lib/tracking/url-builder';
 import { recordAuditLog } from '@/lib/data/audit-logs';
 import type { ResourceWithRelations } from '@/types/resource';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   _request: Request,
@@ -149,6 +152,16 @@ export async function PUT(
       actorId: profile.id,
     });
 
+    try {
+      revalidatePath('/');
+      revalidatePath('/resources');
+      revalidatePath(`/resources/${id}`);
+      if (existing.slug) revalidatePath(`/resources/${existing.slug}`);
+      revalidatePath('/admin/resources');
+    } catch {
+      // Non-fatal
+    }
+
     return NextResponse.json({ success: true, resource: updatedResource });
   } catch (err) {
     console.error('Error updating resource:', err);
@@ -179,6 +192,14 @@ export async function DELETE(
       details: { deleted: true },
       actorId: profile.id,
     });
+
+    try {
+      revalidatePath('/');
+      revalidatePath('/resources');
+      revalidatePath('/admin/resources');
+    } catch {
+      // Non-fatal
+    }
 
     return NextResponse.json({ success: deleted });
   } catch (err) {

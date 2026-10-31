@@ -4,6 +4,8 @@ import { getAllAdminResources, getActivePlatforms, getActiveCategories } from '@
 import { AdminHeader } from '@/components/admin/admin-header';
 import { AdminResourcesClient } from './admin-resources-client';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminResourcesPage() {
   const profile = await getCurrentUserProfile();
   if (!profile) redirect('/login?next=/admin/resources');

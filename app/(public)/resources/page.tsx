@@ -10,6 +10,8 @@ import { ErrorState } from '@/components/shared/error-state';
 import { ResourceCard } from '@/components/resources/resource-card';
 import { EcosystemBanner } from '@/components/resources/ecosystem-banner';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function ResourcesPage({ searchParams }: { searchParams: SearchParams }) {

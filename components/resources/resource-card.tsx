@@ -102,6 +102,13 @@ export function ResourceCard({
             href={`/go/${resource.slug}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              try {
+                fetch(`/api/resources/${resource.slug}/track`, { method: 'POST', keepalive: true });
+              } catch {
+                // non-blocking
+              }
+            }}
             className="inline-flex h-8 items-center justify-center rounded-lg bg-[#B94A50] hover:bg-[#A13D43] active:bg-[#8D3338] dark:hover:bg-[#C85A60] px-3 text-xs font-semibold text-white dark:text-[#F6F5F3] shadow-xs transition-colors"
             title="Open official destination"
           >

@@ -5,6 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { buildTrackedUrl } from '@/lib/tracking/url-builder';
 import type { TrackingConfig } from '@/types/tracking';
@@ -55,7 +56,38 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   // before returning the 302 redirect, without blocking user navigation on network delay.
   try {
     const incrementPromise = (async () => {
-      // 1. Try slug-based RPC increment
+      // 1. Try p_identifier RPC increment
+      try {
+        const { error: pRpcErr } = await (supabase.rpc as unknown as (
+          fn: string,
+          args: { p_identifier: string }
+        ) => Promise<{ error: unknown }>)(
+          'increment_resource_click',
+          { p_identifier: slug }
+        );
+        if (!pRpcErr) {
+          // Check if user is logged in to record view history
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              await (supabase.rpc as unknown as (
+                fn: string,
+                args: { p_identifier: string }
+              ) => Promise<unknown>)(
+                'record_resource_view_history',
+                { p_identifier: slug }
+              );
+            }
+          } catch {
+            // Non-fatal
+          }
+          return;
+        }
+      } catch {
+        // Fallback to legacy signatures
+      }
+
+      // 2. Try legacy slug-based RPC increment
       try {
         const { error: slugRpcErr } = await (supabase.rpc as unknown as (
           fn: string,
@@ -68,7 +100,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
         // Fallback to UUID-based RPC
       }
 
-      // 2. Try UUID-based RPC increment if resourceId exists
+      // 3. Try UUID-based RPC increment if resourceId exists
       if (resourceId) {
         try {
           await (supabase.rpc as unknown as (
@@ -82,12 +114,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
           // Fallback to direct update
         }
 
-        // 3. Direct SQL column increment fallback
+        // 4. Direct SQL column increment fallback
         try {
           await (supabase.from('resources') as unknown as {
             update: (vals: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
           })
-            .update({ click_count: 1, updated_at: new Date().toISOString() })
+            .update({ click_count: 1, clicks_count: 1, updated_at: new Date().toISOString() })
             .eq('id', resourceId);
         } catch {
           // Non-fatal
@@ -101,5 +133,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     // Non-fatal if DB RPC fails
   }
 
-  return NextResponse.redirect(destination, { status: 302 });
+  // Invalidate stale caches so views & clicks reflect immediately
+  try {
+    revalidatePath('/resources');
+    revalidatePath('/recent');
+    revalidatePath('/admin');
+    revalidatePath('/admin/resources');
+  } catch {
+    // Non-fatal
+  }
+
+  const response = NextResponse.redirect(destination, { status: 302 });
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return response;
 }
