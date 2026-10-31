@@ -160,3 +160,4 @@ export async function recordResourceViewHistory(identifier: string): Promise<voi
     // Non-fatal
   }
 }
+

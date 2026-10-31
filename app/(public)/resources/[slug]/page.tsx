@@ -10,7 +10,7 @@ import { FavoriteButton } from '@/components/resources/favorite-button';
 import { RecentTracker } from '@/components/personalization/recent-tracker';
 import { ResourceLogo } from '@/components/resources/resource-logo';
 import { siteConfig } from '@/config/site';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Eye, Link2 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,16 +68,20 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
             {/* Formatted Views & Clicks Badges */}
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#FCECEB] dark:bg-[#252429] px-2.5 py-0.5 text-xs font-medium text-[#777171] dark:text-[#A8A2A2]"
                 title="Resource page impressions"
               >
-                👁️ {views.toLocaleString()} views
+                <span className="sr-only">👁️</span>
+                <Eye className="h-3.5 w-3.5 text-[#777171] dark:text-[#A8A2A2]" />
+                <span>{views.toLocaleString()} views</span>
               </span>
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-[#FCECEB] dark:bg-[#252429] px-2.5 py-0.5 text-xs font-semibold text-[#B94A50] dark:text-[#D98C91]"
+                className="inline-flex items-center gap-1.5 rounded-md bg-[rgba(185,74,80,0.12)] dark:bg-[rgba(217,140,145,0.15)] px-2.5 py-0.5 text-xs font-semibold text-[#B94A50] dark:text-[#D98C91]"
                 title="Outbound link referrals"
               >
-                🔗 {clicks.toLocaleString()} clicks
+                <span className="sr-only">🔗</span>
+                <Link2 className="h-3.5 w-3.5 text-[#B94A50] dark:text-[#D98C91]" />
+                <span>{clicks.toLocaleString()} clicks</span>
               </span>
               <Badge variant="outline">{resource.platform?.name ?? 'Microsoft'}</Badge>
             </div>

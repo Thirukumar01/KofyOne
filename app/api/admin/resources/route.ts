@@ -3,8 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient, hasAdminCredentials } from '@/lib/supabase/admin';
-import { saveCustomResource } from '@/lib/data/custom-resources';
-import { getActiveCategories, getActivePlatforms, getAllAdminResources } from '@/lib/supabase/db';
+import { saveCustomResource, deleteCustomResource } from '@/lib/data/custom-resources';
+import { getActiveCategories, getActivePlatforms, getAllAdminResources, deleteResourceById } from '@/lib/supabase/db';
 import { isMicrosoftPlatform } from '@/lib/tracking/url-builder';
 import { recordAuditLog } from '@/lib/data/audit-logs';
 import type { ResourceWithRelations } from '@/types/resource';
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const rawContributorId = typeof body.contributor_id === 'string' ? body.contributor_id.trim() : '';
     const contributor_id = isMicrosoft && rawContributorId ? rawContributorId : null;
 
-    // Field validation - Accept any valid http or https URL across any provider
+    // Field validation - Accepts ANY valid http/https URL across any provider (e.g. https://carbon-z.vercel.app/)
     if (!name) {
       return NextResponse.json({ error: 'Resource name is required.' }, { status: 400 });
     }
@@ -101,13 +101,44 @@ export async function POST(request: Request) {
       allCategories.find((c) => c.slug === category_slug || c.id === body.category_id) ||
       allCategories[0];
 
-    // Check slug uniqueness across existing resources and append suffix if collision
-    const existing = await getAllAdminResources();
-    if (existing.some((r) => r.slug === slug)) {
-      slug = `${slug}-${Date.now().toString().slice(-4)}`;
+    // Primary persistence: Call SECURITY DEFINER stored procedure public.admin_save_resource
+    let savedResourceFromRpc: ResourceWithRelations | null = null;
+    try {
+      const supabase = hasAdminCredentials() ? createAdminClient() : await createClient();
+      const rpcPayload = {
+        name,
+        slug,
+        description,
+        official_url,
+        platform_slug,
+        platform_id: matchedPlatform.id,
+        category_slug,
+        categories: [matchedCategory],
+        subcategory,
+        tags,
+        featured,
+        is_published,
+        logo_url,
+        contributor_id,
+      };
+
+      const { data: rpcRes, error: rpcErr } = await (supabase.rpc as unknown as (
+        fn: string,
+        args: { p_payload: Record<string, unknown> }
+      ) => Promise<{ data: { success?: boolean; resource?: ResourceWithRelations; error?: string } | null; error: unknown }>)(
+        'admin_save_resource',
+        { p_payload: rpcPayload }
+      );
+
+      if (!rpcErr && rpcRes?.resource) {
+        savedResourceFromRpc = rpcRes.resource;
+      }
+    } catch {
+      // Fall through to standard fallback
     }
 
-    const newResource: ResourceWithRelations = {
+    // Build complete resource object
+    const finalResource: ResourceWithRelations = savedResourceFromRpc || {
       id: 'custom-' + Date.now(),
       platform_id: matchedPlatform.id,
       name,
@@ -145,78 +176,18 @@ export async function POST(request: Request) {
       categories: [matchedCategory],
     };
 
-    // Save to custom resources storage
-    saveCustomResource(newResource);
+    // Safely update custom resources cache (never throws)
+    saveCustomResource(finalResource);
 
     await recordAuditLog({
       action: 'create_resource',
       entityType: 'resource',
-      entityId: newResource.slug,
-      details: { name: newResource.name, platform: matchedPlatform.name },
+      entityId: finalResource.slug,
+      details: { name: finalResource.name, platform: matchedPlatform.name },
       actorId: profile.id,
     });
 
-    // Also attempt Supabase insert with initialized counters
-    try {
-      const supabase = hasAdminCredentials() ? createAdminClient() : await createClient();
-
-      // Resolve platform UUID in database
-      const { data: dbPlatform } = await (supabase.from('platforms') as unknown as {
-        select: (cols: string) => { eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: { id: string } | null }> } };
-      })
-        .select('id')
-        .eq('slug', matchedPlatform.slug)
-        .maybeSingle();
-
-      const platformId = dbPlatform?.id || (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(matchedPlatform.id) ? matchedPlatform.id : null);
-
-      const { data: dbCat } = await (supabase.from('categories') as unknown as {
-        select: (cols: string) => { eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: { id: string } | null }> } };
-      })
-        .select('id')
-        .eq('slug', matchedCategory.slug)
-        .maybeSingle();
-
-      const categoryId = dbCat?.id || (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(matchedCategory.id) ? matchedCategory.id : null);
-
-      if (platformId) {
-        const { data: insertedRow } = await (supabase.from('resources') as unknown as {
-          insert: (row: Record<string, unknown>) => { select: (cols: string) => { maybeSingle: () => Promise<{ data: { id: string } | null }> } };
-        })
-          .insert({
-            name,
-            slug,
-            description,
-            official_url,
-            platform_id: platformId,
-            featured,
-            is_published,
-            is_active: true,
-            view_count: 0,
-            views_count: 0,
-            click_count: 0,
-            clicks_count: 0,
-            logo_url,
-            contributor_id,
-            subcategory,
-          })
-          .select('id')
-          .maybeSingle();
-
-        if (insertedRow?.id && categoryId) {
-          await (supabase.from('resource_categories') as unknown as {
-            insert: (row: Record<string, unknown>) => Promise<unknown>;
-          }).insert({
-            resource_id: insertedRow.id,
-            category_id: categoryId,
-          });
-        }
-      }
-    } catch {
-      // Non-fatal if Supabase insert fails or table is offline
-    }
-
-    // Revalidate paths so newly added resources appear immediately
+    // Revalidate paths so new resource appears immediately
     try {
       revalidatePath('/');
       revalidatePath('/resources');
@@ -225,11 +196,73 @@ export async function POST(request: Request) {
       // Non-fatal
     }
 
-    return NextResponse.json({ success: true, resource: newResource });
+    return NextResponse.json({ success: true, resource: finalResource });
   } catch (err) {
     console.error('Error adding resource:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to create resource.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const profile = await getCurrentUserProfile();
+    if (!profile || profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized: Admin role required.' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get('id');
+
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body.id || body.slug || body.identifier;
+      } catch {
+        // body not present
+      }
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'Resource identifier is required.' }, { status: 400 });
+    }
+
+    // Call atomic admin_delete_resource
+    try {
+      const supabase = hasAdminCredentials() ? createAdminClient() : await createClient();
+      await (supabase.rpc as unknown as (
+        fn: string,
+        args: { p_identifier: string }
+      ) => Promise<unknown>)('admin_delete_resource', { p_identifier: id });
+    } catch {
+      // Fallback
+    }
+
+    deleteResourceById(id);
+    deleteCustomResource(id);
+
+    await recordAuditLog({
+      action: 'delete_resource',
+      entityType: 'resource',
+      entityId: id,
+      details: { deleted: true },
+      actorId: profile.id,
+    });
+
+    try {
+      revalidatePath('/');
+      revalidatePath('/resources');
+      revalidatePath('/admin/resources');
+    } catch {
+      // Non-fatal
+    }
+
+    return NextResponse.json({ success: true, deleted: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Failed to delete resource.' },
       { status: 500 }
     );
   }

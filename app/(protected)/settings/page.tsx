@@ -490,7 +490,7 @@ function SettingsContent() {
             <CardHeader>
               <CardTitle className="text-base">Profile Details</CardTitle>
               <CardDescription className="text-xs">
-                Public learner information displayed across KofyOne.
+                Your public profile details.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -534,9 +534,6 @@ function SettingsContent() {
                     disabled={savingProfile}
                     maxLength={300}
                   />
-                  <p className="text-[11px] text-zinc-400">
-                    Brief snapshot of your academic or development journey (max 300 characters).
-                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -87,9 +87,21 @@ export async function getTrackingConfig(platformId: string): Promise<DataResult<
 export async function getPublishedResources(): Promise<DataResult<ResourceWithRelations[]>> {
   let dbResources: ResourceWithRelations[] = [];
   let fetchError: Error | null = null;
+  let deletedSlugs = new Set<string>();
 
   try {
     const supabase = await createClient();
+
+    // Check deleted blacklist
+    try {
+      const { data: delData } = await supabase.from('deleted_resource_slugs').select('slug');
+      if (delData) {
+        deletedSlugs = new Set(delData.map((d: { slug: string }) => d.slug));
+      }
+    } catch {
+      // Ignore if table not yet migrated
+    }
+
     const { data, error } = await supabase
       .from('resources')
       .select('*, platforms(*), tracking_configs(*), resource_categories(categories(*))')
@@ -116,17 +128,19 @@ export async function getPublishedResources(): Promise<DataResult<ResourceWithRe
     fetchError = error instanceof Error ? error : new Error('Unable to load resources.');
   }
 
-  // Merge canonical seed resources for any not present in DB
-  const canonicalPublished = CANONICAL_SEED_RESOURCES.filter((r) => r.is_published);
+  // Merge canonical seed resources for any not present in DB and not deleted
+  const canonicalPublished = CANONICAL_SEED_RESOURCES.filter(
+    (r) => r.is_published && !deletedSlugs.has(r.slug)
+  );
   const dbSlugs = new Set(dbResources.map((r) => r.slug));
   const missingCanonical = canonicalPublished.filter((c) => !dbSlugs.has(c.slug));
 
-  // Merge custom resources created by administrator
-  const custom = getCustomResources().filter((r) => r.is_published);
+  // Merge custom resources created by administrator (filtering deleted)
+  const custom = getCustomResources().filter((r) => r.is_published && !deletedSlugs.has(r.slug));
   const allExistingSlugs = new Set([...dbSlugs, ...missingCanonical.map((c) => c.slug)]);
   const uniqueCustom = custom.filter((c) => !allExistingSlugs.has(c.slug));
 
-  const merged = [...uniqueCustom, ...dbResources, ...missingCanonical];
+  const merged = [...uniqueCustom, ...dbResources.filter((r) => !deletedSlugs.has(r.slug)), ...missingCanonical];
   return { data: merged, error: merged.length > 0 ? null : fetchError };
 }
 
@@ -161,16 +175,21 @@ export async function getPublishedResourceBySlug(slug: string) {
 }
 
 export async function deleteResourceById(id: string): Promise<boolean> {
-  // 1. Delete from custom resources
-  deleteCustomResource(id);
-
-  // 2. Also attempt Supabase DB delete
+  // 1. Delete via SECURITY DEFINER stored procedure (removes DB row & blacklists slug)
   try {
     const supabase = await createClient();
-    await supabase.from('resources').delete().eq('id', id);
+    await (supabase.rpc as unknown as (
+      fn: string,
+      args: { p_identifier: string }
+    ) => Promise<unknown>)('admin_delete_resource', {
+      p_identifier: id,
+    });
   } catch {
-    // Ignore if DB not linked
+    // Non-fatal fallback
   }
+
+  // 2. Also remove from local custom resources
+  deleteCustomResource(id);
 
   return true;
 }
@@ -179,28 +198,42 @@ export async function updateResourceById(
   id: string,
   updates: Partial<ResourceWithRelations>
 ): Promise<ResourceWithRelations | null> {
-  // 1. Update in custom resources
-  const updated = updateCustomResource(id, updates);
-
-  // 2. Also attempt Supabase DB update
+  // 1. Try atomic admin_save_resource RPC
   try {
     const supabase = await createClient();
-    const dbUpdates: Record<string, unknown> = {};
-    if (updates.name !== undefined) dbUpdates.name = updates.name;
-    if (updates.description !== undefined) dbUpdates.description = updates.description;
-    if (updates.official_url !== undefined) dbUpdates.official_url = updates.official_url;
-    if (updates.featured !== undefined) dbUpdates.featured = updates.featured;
-    if (updates.is_published !== undefined) dbUpdates.is_published = updates.is_published;
-    if (updates.logo_url !== undefined) dbUpdates.logo_url = updates.logo_url;
-    if (updates.contributor_id !== undefined) dbUpdates.contributor_id = updates.contributor_id;
-    if (updates.subcategory !== undefined) dbUpdates.subcategory = updates.subcategory;
+    const payload = {
+      id,
+      name: updates.name,
+      slug: updates.slug,
+      description: updates.description,
+      official_url: updates.official_url,
+      featured: updates.featured,
+      is_published: updates.is_published,
+      logo_url: updates.logo_url,
+      contributor_id: updates.contributor_id,
+      subcategory: updates.subcategory,
+      platform_id: updates.platform_id || updates.platform?.id || updates.platform?.slug,
+      category_slug: updates.categories?.[0]?.slug,
+      tags: updates.tags,
+    };
 
-    await (supabase.from('resources') as unknown as {
-      update: (row: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
-    }).update(dbUpdates).eq('id', id);
+    const { data: rpcRes, error } = await (supabase.rpc as unknown as (
+      fn: string,
+      args: { p_payload: Record<string, unknown> }
+    ) => Promise<{ data: { success?: boolean; resource?: ResourceWithRelations } | null; error: unknown }>)(
+      'admin_save_resource',
+      { p_payload: payload }
+    );
+
+    if (!error && rpcRes?.resource) {
+      updateCustomResource(id, rpcRes.resource);
+      return rpcRes.resource;
+    }
   } catch {
-    // Ignore if DB not linked
+    // Fall back to direct updates
   }
 
+  // 2. Fallback in custom resources
+  const updated = updateCustomResource(id, updates);
   return updated;
 }

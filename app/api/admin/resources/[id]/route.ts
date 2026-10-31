@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getCurrentUserProfile } from '@/lib/supabase/auth';
+import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, hasAdminCredentials } from '@/lib/supabase/admin';
 import { getResourceByIdOrSlug, updateResourceById, deleteResourceById, getActivePlatforms, getActiveCategories } from '@/lib/supabase/db';
 import { isMicrosoftPlatform } from '@/lib/tracking/url-builder';
 import { recordAuditLog } from '@/lib/data/audit-logs';
@@ -85,7 +87,6 @@ export async function PUT(
         contributor_id = existing.contributor_id || null;
       }
     } else {
-      // Non-Microsoft provider: never allow or retain Contributor ID
       contributor_id = null;
     }
 
@@ -142,6 +143,25 @@ export async function PUT(
       updates.tracking_config = null;
     }
 
+    // Try admin_save_resource RPC
+    try {
+      const supabase = hasAdminCredentials() ? createAdminClient() : await createClient();
+      await (supabase.rpc as unknown as (
+        fn: string,
+        args: { p_payload: Record<string, unknown> }
+      ) => Promise<unknown>)('admin_save_resource', {
+        p_payload: {
+          id: existing.id,
+          slug: existing.slug,
+          ...updates,
+          platform_slug: matchedPlatform.slug,
+          category_slug: matchedCategory.slug,
+        },
+      });
+    } catch {
+      // Non-fatal
+    }
+
     const updatedResource = await updateResourceById(id, updates);
 
     await recordAuditLog({
@@ -162,7 +182,7 @@ export async function PUT(
       // Non-fatal
     }
 
-    return NextResponse.json({ success: true, resource: updatedResource });
+    return NextResponse.json({ success: true, resource: updatedResource || existing });
   } catch (err) {
     console.error('Error updating resource:', err);
     return NextResponse.json(
@@ -183,6 +203,18 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Call atomic RPC
+    try {
+      const supabase = hasAdminCredentials() ? createAdminClient() : await createClient();
+      await (supabase.rpc as unknown as (
+        fn: string,
+        args: { p_identifier: string }
+      ) => Promise<unknown>)('admin_delete_resource', { p_identifier: id });
+    } catch {
+      // Non-fatal
+    }
+
     const deleted = await deleteResourceById(id);
 
     await recordAuditLog({

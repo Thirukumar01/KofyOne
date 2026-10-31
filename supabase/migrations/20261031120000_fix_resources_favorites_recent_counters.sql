@@ -460,3 +460,4 @@ END $$;
 -- 7. NOTIFY POSTGREST SCHEMA CACHE RELOAD
 -- -----------------------------------------------------------------------------
 NOTIFY pgrst, 'reload schema';
+
