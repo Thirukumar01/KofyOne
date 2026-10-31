@@ -28,13 +28,13 @@ export default async function CategoriesPage() {
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => (
           <Link key={category.id} href={`/resources?category=${category.slug}`}>
-            <Card className="h-full transition-colors hover:border-orange-400">
+            <Card className="h-full transition-colors hover:border-[#B94A50] dark:hover:border-[#D98C91]">
               <CardHeader>
                 <CardTitle>{category.name}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">{category.description}</p>
-                <p className="mt-4 text-sm font-medium text-orange-700 dark:text-orange-400">
+                <p className="mt-4 text-sm font-medium text-[#B94A50] dark:text-[#D98C91]">
                   {resources.filter((resource) => resource.categories.some((item) => item.id === category.id)).length} resources
                 </p>
               </CardContent>

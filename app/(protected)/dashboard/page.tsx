@@ -47,7 +47,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-3">
           {role === 'admin' && (
             <Link href="/admin">
-              <Button variant="primary" className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700">
+              <Button variant="primary" className="inline-flex items-center gap-2">
                 <Shield className="h-4 w-4" />
                 Admin Portal
               </Button>
@@ -66,13 +66,13 @@ export default async function DashboardPage() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {/* Saved Favorites */}
         <Link href="/favorites">
-          <Card className="h-full hover:border-orange-500 transition-colors group">
+          <Card className="h-full hover:border-[#B94A50] dark:hover:border-[#D98C91] transition-colors group">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(185,74,80,0.12)] dark:bg-[rgba(217,140,145,0.15)] text-[#B94A50] dark:text-[#D98C91]">
                   <Bookmark className="h-5 w-5" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors" />
               </div>
               <CardTitle className="text-lg mt-3">Saved Resources</CardTitle>
               <CardDescription className="text-xs">
@@ -84,13 +84,13 @@ export default async function DashboardPage() {
 
         {/* Recently Viewed */}
         <Link href="/recent">
-          <Card className="h-full hover:border-orange-500 transition-colors group">
+          <Card className="h-full hover:border-[#B94A50] dark:hover:border-[#D98C91] transition-colors group">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
                   <Clock className="h-5 w-5" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors" />
               </div>
               <CardTitle className="text-lg mt-3">Recently Viewed</CardTitle>
               <CardDescription className="text-xs">
@@ -102,13 +102,13 @@ export default async function DashboardPage() {
 
         {/* Profile Settings */}
         <Link href="/profile">
-          <Card className="h-full hover:border-orange-500 transition-colors group">
+          <Card className="h-full hover:border-[#B94A50] dark:hover:border-[#D98C91] transition-colors group">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
                   <User className="h-5 w-5" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors" />
               </div>
               <CardTitle className="text-lg mt-3">Profile Settings</CardTitle>
               <CardDescription className="text-xs">
@@ -120,13 +120,13 @@ export default async function DashboardPage() {
 
         {/* Security & Account */}
         <Link href="/settings/security">
-          <Card className="h-full hover:border-orange-500 transition-colors group">
+          <Card className="h-full hover:border-[#B94A50] dark:hover:border-[#D98C91] transition-colors group">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
                   <Shield className="h-5 w-5" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors" />
               </div>
               <CardTitle className="text-lg mt-3">Security & Account</CardTitle>
               <CardDescription className="text-xs">
@@ -138,13 +138,13 @@ export default async function DashboardPage() {
 
         {/* Microsoft Ecosystem */}
         <Link href="/platforms/microsoft">
-          <Card className="h-full hover:border-orange-500 transition-colors group">
+          <Card className="h-full hover:border-[#B94A50] dark:hover:border-[#D98C91] transition-colors group">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400">
                   <ExternalLink className="h-5 w-5" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors" />
               </div>
               <CardTitle className="text-lg mt-3">Microsoft Ecosystem</CardTitle>
               <CardDescription className="text-xs">

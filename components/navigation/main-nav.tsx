@@ -20,10 +20,10 @@ export function MainNav(props: { profile?: UserProfile | null } = {}) {
             href={item.href}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'transition-colors hover:text-zinc-900 dark:hover:text-zinc-50',
+              'transition-colors hover:text-[#292526] dark:hover:text-[#F6F5F3]',
               isActive
-                ? 'font-semibold text-orange-600 dark:text-orange-400'
-                : 'text-zinc-600 dark:text-zinc-400'
+                ? 'font-semibold text-[#B94A50] dark:text-[#D98C91]'
+                : 'text-[#777171] dark:text-[#A8A2A2]'
             )}
           >
             {item.title}

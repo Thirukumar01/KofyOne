@@ -175,7 +175,7 @@ export function ResourceForm({ categories }: { categories: CategoryItem[] }) {
                   onClick={() => setLogoUrl(preset.url)}
                   className={`flex flex-col items-center gap-1.5 rounded-xl border p-2 text-center transition-all ${
                     logoUrl === preset.url
-                      ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-950/40 ring-2 ring-orange-500/20'
+                      ? 'border-[#B94A50] bg-[#FCECEB] dark:bg-[rgba(217,140,145,0.15)] ring-2 ring-[#B94A50]/20'
                       : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
                   }`}
                 >
@@ -230,7 +230,7 @@ export function ResourceForm({ categories }: { categories: CategoryItem[] }) {
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#B94A50]"
               placeholder="Explain what students or developers will learn or build with this resource..."
             />
           </div>
@@ -241,7 +241,7 @@ export function ResourceForm({ categories }: { categories: CategoryItem[] }) {
                 type="checkbox"
                 checked={featured}
                 onChange={(e) => setFeatured(e.target.checked)}
-                className="h-4 w-4 rounded text-orange-600 focus:ring-orange-500"
+                className="h-4 w-4 rounded text-[#B94A50] focus:ring-[#B94A50]"
               />
               <div>
                 <span className="text-xs font-semibold block text-zinc-900 dark:text-zinc-100">Featured Resource</span>
@@ -254,7 +254,7 @@ export function ResourceForm({ categories }: { categories: CategoryItem[] }) {
                 type="checkbox"
                 checked={isPublished}
                 onChange={(e) => setIsPublished(e.target.checked)}
-                className="h-4 w-4 rounded text-orange-600 focus:ring-orange-500"
+                className="h-4 w-4 rounded text-[#B94A50] focus:ring-[#B94A50]"
               />
               <div>
                 <span className="text-xs font-semibold block text-zinc-900 dark:text-zinc-100">Published Status</span>
@@ -292,11 +292,11 @@ export function ResourceForm({ categories }: { categories: CategoryItem[] }) {
       {/* Live Preview Card (5 cols) */}
       <div className="lg:col-span-5 space-y-4">
         <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-          <Sparkles className="h-3.5 w-3.5 text-orange-500" />
+          <Sparkles className="h-3.5 w-3.5 text-[#B94A50] dark:text-[#D98C91]" />
           Live User Portal Card Preview
         </div>
 
-        <Card className="border-orange-500/30 shadow-md">
+        <Card className="border-[#B94A50]/30 shadow-md">
           <CardHeader>
             <div className="flex items-center justify-between gap-2">
               <ResourceLogo
@@ -320,7 +320,7 @@ export function ResourceForm({ categories }: { categories: CategoryItem[] }) {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
               <Badge variant="brand">{selectedCategoryName}</Badge>
-              <span className="text-xs text-orange-600 font-medium flex items-center gap-1">
+              <span className="text-xs text-[#B94A50] dark:text-[#D98C91] font-medium flex items-center gap-1">
                 Open Resource <ExternalLink className="h-3 w-3" />
               </span>
             </div>

@@ -172,7 +172,7 @@ export function ThemeToggle({ className }: { className?: string }) {
           : 'Toggle theme'
       }
       className={cn(
-        'relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 shadow-xs transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-orange-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100',
+        'relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#F0DCDD] bg-white text-[#292526] shadow-xs transition-colors hover:bg-[#FCECEB] hover:text-[#292526] focus-visible:outline-2 focus-visible:outline-[#B94A50] dark:border-[#2E2C30] dark:bg-[#1E1E22] dark:text-[#F6F5F3] dark:hover:bg-[#252429] dark:hover:text-[#F6F5F3]',
         className
       )}
     >
@@ -237,8 +237,8 @@ export function ThemeSelectorCards() {
             className={cn(
               'flex flex-col items-start p-4 rounded-xl border text-left transition-all',
               isSelected
-                ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 shadow-xs ring-1 ring-orange-500'
-                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900/50'
+                ? 'border-[#B94A50] bg-[#FCECEB] dark:bg-[rgba(217,140,145,0.15)] shadow-xs ring-1 ring-[#B94A50] dark:ring-[#D98C91]'
+                : 'border-[#F0DCDD] dark:border-[#2E2C30] hover:border-[#B94A50]/50 dark:hover:border-[#D98C91]/50 bg-white dark:bg-[#1E1E22]'
             )}
           >
             <div className="flex w-full items-center justify-between mb-2">
@@ -246,14 +246,14 @@ export function ThemeSelectorCards() {
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-lg',
                   isSelected
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                    ? 'bg-[#B94A50] text-white dark:text-[#F6F5F3]'
+                    : 'bg-[#FCECEB] dark:bg-[#252429] text-[#777171] dark:text-[#A8A2A2]'
                 )}
               >
                 <Icon className="h-4 w-4" />
               </div>
               {isSelected && (
-                <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400">
+                <span className="text-[11px] font-semibold text-[#B94A50] dark:text-[#D98C91]">
                   Active
                 </span>
               )}

@@ -22,7 +22,7 @@ export function AdminHeader({
           <div className="flex items-center gap-2">
             <Link
               href="/admin"
-              className="text-xs font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 uppercase tracking-wider"
+              className="text-xs font-semibold text-[#B94A50] hover:text-[#A13D43] dark:text-[#D98C91] uppercase tracking-wider"
             >
               Admin Portal
             </Link>

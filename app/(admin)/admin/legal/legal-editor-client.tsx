@@ -436,7 +436,7 @@ export function LegalEditorClient({ initialPages }: LegalEditorClientProps) {
               <button
                 type="button"
                 onClick={() => insertMarkdownSnippet('[support@kofyone.com]')}
-                className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-1 font-mono text-[11px] font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
+                className="inline-flex items-center gap-1 rounded-md bg-[#FCECEB] px-2 py-1 font-mono text-[11px] font-semibold text-[#B94A50] hover:bg-[#FCECEB]/80 dark:bg-[#252429] dark:text-[#D98C91]"
                 title="Add Highlighted Placeholder"
               >
                 [Placeholder]

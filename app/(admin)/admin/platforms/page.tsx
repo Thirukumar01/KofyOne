@@ -40,7 +40,7 @@ export default async function AdminPlatformsPage() {
           <Card key={platform.id}>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FCECEB] text-[#B94A50] dark:bg-[#252429] dark:text-[#D98C91]">
                   <Compass className="h-5 w-5" />
                 </div>
                 <Badge variant={platform.is_active ? 'brand' : 'outline'}>
@@ -66,7 +66,7 @@ export default async function AdminPlatformsPage() {
                     href={platform.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 font-medium text-orange-600 hover:underline dark:text-orange-400"
+                    className="inline-flex items-center gap-1 font-medium text-[#B94A50] hover:underline dark:text-[#D98C91]"
                   >
                     Visit <ExternalLink className="h-3 w-3" />
                   </a>

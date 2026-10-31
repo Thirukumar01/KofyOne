@@ -22,7 +22,7 @@ export async function Header() {
     (profile?.email ? profile.email.split('@')[0] : '');
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/85 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/85">
+    <header className="sticky top-0 z-40 w-full border-b border-[#F0DCDD] bg-[#FFF5F4]/90 backdrop-blur-md dark:border-[#2E2C30] dark:bg-[#151517]/90 transition-colors">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
@@ -59,9 +59,9 @@ export async function Header() {
                 {profile.role === 'admin' ? (
                   <Link
                     href="/admin"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:hover:bg-orange-900/60 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(185,74,80,0.12)] px-3 py-1 text-xs font-semibold text-[#B94A50] hover:bg-[rgba(185,74,80,0.18)] dark:bg-[rgba(217,140,145,0.15)] dark:text-[#D98C91] dark:hover:bg-[rgba(217,140,145,0.22)] border border-[rgba(185,74,80,0.20)] dark:border-[rgba(217,140,145,0.25)] transition-colors"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#B94A50] dark:bg-[#D98C91] animate-pulse" />
                     Admin Portal
                   </Link>
                 ) : null}
@@ -71,7 +71,7 @@ export async function Header() {
             ) : (
               <Link
                 href="/login"
-                className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                className="text-sm font-medium text-[#777171] hover:text-[#292526] dark:text-[#A8A2A2] dark:hover:text-[#F6F5F3]"
               >
                 Sign In
               </Link>
@@ -79,7 +79,7 @@ export async function Header() {
 
             <Link
               href="/resources"
-              className="inline-flex h-9 items-center justify-center rounded-lg bg-orange-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-orange-700 transition-colors"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-[#B94A50] px-4 text-sm font-medium text-white dark:text-[#F6F5F3] shadow-sm hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] transition-colors"
             >
               Explore Resources
             </Link>

@@ -62,12 +62,12 @@ export function MobileNav({
 
       {isOpen && (
         <div
-          className="fixed inset-x-0 top-16 z-50 border-b border-zinc-200 bg-white/95 p-6 shadow-lg backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
+          className="fixed inset-x-0 top-16 z-50 border-b border-[#F0DCDD] bg-[#FFF5F4]/95 p-6 shadow-lg backdrop-blur-md dark:border-[#2E2C30] dark:bg-[#151517]/95"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile Navigation Menu"
         >
-          <div className="mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <div className="mb-4 pb-4 border-b border-[#F0DCDD] dark:border-[#2E2C30] flex items-center justify-between">
             <BrandingLogo branding={branding} />
             <ThemeToggle />
           </div>
@@ -84,8 +84,8 @@ export function MobileNav({
                   className={cn(
                     'text-base font-medium transition-colors',
                     isActive
-                      ? 'font-semibold text-orange-600 dark:text-orange-400'
-                      : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+                      ? 'font-semibold text-[#B94A50] dark:text-[#D98C91]'
+                      : 'text-[#777171] hover:text-[#292526] dark:text-[#A8A2A2] dark:hover:text-[#F6F5F3]'
                   )}
                 >
                   {item.title}
@@ -94,18 +94,18 @@ export function MobileNav({
             })}
 
             {profile && (
-              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-col space-y-2 text-sm">
-                <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-zinc-50 dark:bg-zinc-900/60">
+              <div className="pt-2 border-t border-[#F0DCDD] dark:border-[#2E2C30] flex flex-col space-y-2 text-sm">
+                <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-[#FCECEB] dark:bg-[#252429]">
                   <PresetAvatar avatarId={profile.avatar_url} size={28} />
                   <div className="truncate min-w-0 flex-1">
-                    <span className="block text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                    <span className="block text-xs font-semibold text-[#292526] dark:text-[#F6F5F3] truncate">
                       {displayName}
                     </span>
-                    <span className="block text-[10px] text-zinc-400 truncate">
+                    <span className="block text-[10px] text-[#777171] dark:text-[#A8A2A2] truncate">
                       {profile.email}
                     </span>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-zinc-500">
-                      <span className="font-medium text-orange-600 dark:text-orange-400 capitalize">
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#777171]">
+                      <span className="font-medium text-[#B94A50] dark:text-[#D98C91] capitalize">
                         {learnerStage}
                       </span>
                       {platform ? (
@@ -121,21 +121,21 @@ export function MobileNav({
                 <Link
                   href="/dashboard"
                   onClick={close}
-                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600"
+                  className="font-medium text-[#292526] dark:text-[#F6F5F3] hover:text-[#B94A50] dark:hover:text-[#D98C91]"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/settings"
                   onClick={close}
-                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600"
+                  className="font-medium text-[#292526] dark:text-[#F6F5F3] hover:text-[#B94A50] dark:hover:text-[#D98C91]"
                 >
                   User Settings & Profile
                 </Link>
                 <Link
                   href="/settings/security"
                   onClick={close}
-                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600"
+                  className="font-medium text-[#292526] dark:text-[#F6F5F3] hover:text-[#B94A50] dark:hover:text-[#D98C91]"
                 >
                   Security & Account
                 </Link>
@@ -143,7 +143,7 @@ export function MobileNav({
                   <Link
                     href="/admin"
                     onClick={close}
-                    className="font-semibold text-orange-600 dark:text-orange-400"
+                    className="font-semibold text-[#B94A50] dark:text-[#D98C91]"
                   >
                     Admin Portal
                   </Link>

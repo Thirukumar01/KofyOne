@@ -45,7 +45,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
 
       <Link
         href="/resources"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B94A50] hover:text-[#A13D43] dark:text-[#D98C91] dark:hover:text-[#C85A60] transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to catalog
@@ -74,7 +74,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
                 👁️ {views.toLocaleString()} views
               </span>
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-orange-50 dark:bg-orange-950/40 px-2.5 py-0.5 text-xs font-semibold text-orange-700 dark:text-orange-300"
+                className="inline-flex items-center gap-1 rounded-full bg-[#FCECEB] dark:bg-[#252429] px-2.5 py-0.5 text-xs font-semibold text-[#B94A50] dark:text-[#D98C91]"
                 title="Outbound link referrals"
               >
                 🔗 {clicks.toLocaleString()} clicks

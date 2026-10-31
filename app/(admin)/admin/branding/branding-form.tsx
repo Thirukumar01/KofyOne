@@ -203,11 +203,11 @@ export function BrandingForm({ initialBranding }: { initialBranding: SiteBrandin
       )}
 
       {/* Live Responsive Previews Section */}
-      <Card className="border-orange-200/60 dark:border-orange-950/50 shadow-sm overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-orange-50/50 to-amber-50/50 dark:from-zinc-900 dark:to-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800">
+      <Card className="border-[#F0DCDD] dark:border-[#2E2C30] shadow-sm overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-[#FCECEB]/50 to-[#FFF5F4]/50 dark:from-zinc-900 dark:to-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <Eye className="h-5 w-5 text-[#B94A50] dark:text-[#D98C91]" />
               <CardTitle className="text-base font-semibold">Live Responsive Presentation Preview</CardTitle>
             </div>
             <Badge variant="outline" className="text-xs">
@@ -315,7 +315,7 @@ export function BrandingForm({ initialBranding }: { initialBranding: SiteBrandin
                     />
                   ) : (
                     <div className="flex flex-col items-center text-xs text-zinc-400">
-                      <Sparkles className="h-6 w-6 text-orange-500 mb-1" />
+                      <Sparkles className="h-6 w-6 text-[#B94A50] dark:text-[#D98C91] mb-1" />
                       <span>Default System Logo</span>
                     </div>
                   )}
@@ -354,7 +354,7 @@ export function BrandingForm({ initialBranding }: { initialBranding: SiteBrandin
                     const file = e.dataTransfer.files?.[0];
                     if (file) handleFileUpload(file, 'primary');
                   }}
-                  className="cursor-pointer rounded-xl border-2 border-dashed border-zinc-200 hover:border-orange-500 bg-zinc-50/50 hover:bg-orange-50/30 p-6 text-center transition-colors dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-orange-500"
+                  className="cursor-pointer rounded-xl border-2 border-dashed border-zinc-200 hover:border-[#B94A50] bg-zinc-50/50 hover:bg-[#FCECEB]/40 p-6 text-center transition-colors dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-[#D98C91]"
                 >
                   <Upload className="mx-auto h-8 w-8 text-zinc-400 mb-2" />
                   <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
@@ -411,7 +411,7 @@ export function BrandingForm({ initialBranding }: { initialBranding: SiteBrandin
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg border border-zinc-300 bg-white p-2.5 text-xs text-zinc-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-300 bg-white p-2.5 text-xs text-zinc-900 focus:border-[#B94A50] focus:ring-1 focus:ring-[#B94A50] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#D98C91] dark:focus:ring-[#D98C91]"
                   placeholder="A student-focused resource discovery platform..."
                 />
               </div>
@@ -424,7 +424,7 @@ export function BrandingForm({ initialBranding }: { initialBranding: SiteBrandin
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAdvancedVariants(!showAdvancedVariants)}
-                className="text-xs text-orange-600 hover:text-orange-700 dark:text-orange-400"
+                className="text-xs text-[#B94A50] hover:text-[#A13D43] dark:text-[#D98C91] dark:hover:text-[#C85A60]"
               >
                 {showAdvancedVariants ? '▲ Hide Optional Variants' : '▼ Configure Separate Variants (Compact, App Icon, Favicon)'}
               </Button>
@@ -569,7 +569,7 @@ export function BrandingForm({ initialBranding }: { initialBranding: SiteBrandin
             <Button
               type="submit"
               disabled={saving || Boolean(uploadingTarget)}
-              className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm flex items-center gap-2"
+              className="bg-[#B94A50] hover:bg-[#A13D43] text-white shadow-sm flex items-center gap-2 dark:bg-[#B94A50] dark:hover:bg-[#C85A60]"
             >
               {saving ? 'Publishing...' : 'Save & Publish Branding'}
             </Button>

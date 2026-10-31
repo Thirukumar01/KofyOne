@@ -64,8 +64,8 @@ export default async function PublicEventsPage({ searchParams }: { searchParams:
               href={`/events?category=${encodeURIComponent(cat.toLowerCase())}`}
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 isSelected
-                  ? 'bg-orange-600 text-white font-semibold'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                  ? 'bg-[#B94A50] text-white dark:text-[#F6F5F3] font-semibold'
+                  : 'bg-[#FCECEB] text-[#777171] hover:bg-[#F0DCDD] dark:bg-[#252429] dark:text-[#A8A2A2]'
               }`}
             >
               {cat} ({count})
@@ -95,27 +95,27 @@ export default async function PublicEventsPage({ searchParams }: { searchParams:
                 <div className="flex items-center justify-between">
                   <Badge variant="brand">{ev.category}</Badge>
                   <span className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 font-medium">
-                    <Calendar className="h-3.5 w-3.5 text-orange-500" />
+                    <Calendar className="h-3.5 w-3.5 text-[#B94A50] dark:text-[#D98C91]" />
                     {ev.event_date}
                   </span>
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                  <CardTitle className="text-lg font-bold text-[#292526] dark:text-[#F6F5F3] group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors">
                     {ev.title}
                   </CardTitle>
-                  <CardDescription className="text-xs flex items-center gap-1 mt-1 text-zinc-500">
+                  <CardDescription className="text-xs flex items-center gap-1 mt-1 text-[#777171] dark:text-[#A8A2A2]">
                     <MapPin className="h-3 w-3 text-zinc-400" />
                     {ev.location}
                   </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pt-1">
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                <p className="text-xs text-[#777171] dark:text-[#A8A2A2] leading-relaxed">
                   {ev.description}
                 </p>
 
                 {ev.official_url && (
-                  <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/60">
+                  <div className="pt-3 border-t border-[#F0DCDD] dark:border-[#2E2C30]">
                     <a
                       href={ev.official_url}
                       target="_blank"
@@ -125,7 +125,7 @@ export default async function PublicEventsPage({ searchParams }: { searchParams:
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full text-xs flex items-center justify-center gap-1.5 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-950/40"
+                        className="w-full text-xs flex items-center justify-center gap-1.5 hover:bg-[#FCECEB] hover:text-[#B94A50] dark:hover:bg-[#252429] dark:hover:text-[#D98C91]"
                       >
                         Register / Official Info
                         <ExternalLink className="h-3.5 w-3.5" />

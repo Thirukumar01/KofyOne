@@ -66,7 +66,7 @@ export function BrandingLogo({
       ) : (
         <div
           className={cn(
-            'flex items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-sm transition-transform hover:scale-105',
+            'flex items-center justify-center rounded-xl bg-[#B94A50] text-white dark:text-[#F6F5F3] shadow-sm transition-transform hover:scale-105',
             variant === 'compact' || variant === 'square'
               ? 'h-8 w-8'
               : variant === 'favicon'
@@ -79,7 +79,7 @@ export function BrandingLogo({
       )}
 
       {showText && variant !== 'compact' && variant !== 'square' && variant !== 'favicon' && (
-        <span className="font-brand text-2xl sm:text-3xl font-normal tracking-wide text-zinc-900 dark:text-zinc-50 leading-none">
+        <span className="font-brand text-2xl sm:text-3xl font-normal tracking-wide text-[#292526] dark:text-[#F6F5F3] leading-none">
           {appName}
         </span>
       )}

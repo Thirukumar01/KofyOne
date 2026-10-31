@@ -48,7 +48,7 @@ export default async function FavoritesPage() {
             ({ resource_id, resources }) =>
               resources && (
                 <Link key={resource_id} href={`/resources/${resources.slug}`}>
-                  <Card className="h-full hover:border-orange-400 transition-all hover:shadow-sm">
+                  <Card className="h-full hover:border-[#B94A50] dark:hover:border-[#D98C91] transition-all hover:shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-lg">{resources.name}</CardTitle>
                     </CardHeader>

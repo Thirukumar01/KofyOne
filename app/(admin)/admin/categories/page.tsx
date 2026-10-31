@@ -49,7 +49,7 @@ export default async function AdminCategoriesPage() {
           <Card key={cat.id} className="relative overflow-hidden">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FCECEB] text-[#B94A50] dark:bg-[#252429] dark:text-[#D98C91]">
                   <FolderTree className="h-5 w-5" />
                 </div>
                 <Badge variant={cat.is_active ? 'brand' : 'outline'}>
@@ -67,7 +67,7 @@ export default async function AdminCategoriesPage() {
                 <Link
                   href={`/resources?category=${cat.slug}`}
                   target="_blank"
-                  className="inline-flex items-center gap-1 font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400"
+                  className="inline-flex items-center gap-1 font-medium text-[#B94A50] hover:text-[#A13D43] dark:text-[#D98C91] dark:hover:text-[#C85A60]"
                 >
                   Explore <ArrowUpRight className="h-3 w-3" />
                 </Link>

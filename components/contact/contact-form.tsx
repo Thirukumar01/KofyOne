@@ -58,12 +58,12 @@ export function ContactForm() {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
+    <div className="rounded-2xl border border-[#F0DCDD] bg-white p-6 shadow-sm dark:border-[#2E2C30] dark:bg-[#1E1E22] sm:p-8 transition-colors">
       <div className="mb-6">
-        <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-xl font-bold tracking-tight text-[#292526] dark:text-[#F6F5F3]">
           Send Us a Message
         </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-[#777171] dark:text-[#A8A2A2]">
           Have a question, resource suggestion, or feedback? Drop us a note below.
         </p>
       </div>
@@ -157,7 +157,7 @@ export function ContactForm() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             disabled={status === 'loading'}
-            className="w-full rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-900 shadow-xs focus:border-orange-500 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50"
+            className="w-full rounded-xl border border-[#F0DCDD] bg-[#FCECEB] p-3 text-sm text-[#292526] placeholder:text-[#777171] shadow-xs focus:border-[#B94A50] focus:outline-hidden focus:ring-2 focus:ring-[#B94A50]/20 dark:border-[#2E2C30] dark:bg-[#252429] dark:text-[#F6F5F3] dark:placeholder:text-[#A8A2A2] dark:focus:border-[#D98C91] transition-colors"
           />
         </div>
 

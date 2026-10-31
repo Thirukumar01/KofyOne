@@ -28,13 +28,13 @@ export default async function PlatformsPage() {
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
         {platforms.map((platform) => (
           <Link key={platform.id} href={`/platforms/${platform.slug}`}>
-            <Card className="h-full transition-colors hover:border-orange-400">
+            <Card className="h-full transition-colors hover:border-[#B94A50] dark:hover:border-[#D98C91]">
               <CardHeader>
                 <CardTitle>{platform.name}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">{platform.description}</p>
-                <p className="mt-4 text-sm font-medium text-orange-700 dark:text-orange-400">
+                <p className="mt-4 text-sm font-medium text-[#B94A50] dark:text-[#D98C91]">
                   {resources.filter((resource) => resource.platform_id === platform.id).length} resources
                 </p>
               </CardContent>

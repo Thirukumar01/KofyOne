@@ -5,27 +5,51 @@
 :root,
 html.light,
 html[data-theme="light"] {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --surface: #f8fafc;
-  --surface-subtle: #f1f5f9;
-  --border-color: #e2e8f0;
-  --card-bg: #ffffff;
-  --card-border: #e2e8f0;
-  --muted-text: #64748b;
+  /* Fallback compatibility tokens: --background: #ffffff; */
+  --background: #FFF5F4;
+  --foreground: #292526;
+  --surface: #FFFFFF;
+  --surface-subtle: #FCECEB;
+  --border-color: #F0DCDD;
+  --card-bg: #FFFFFF;
+  --card-border: #F0DCDD;
+  --primary: #B94A50;
+  --primary-hover: #A13D43;
+  --primary-active: #8D3338;
+  --primary-foreground: #FFFFFF;
+  --heading-text: #292526;
+  --muted-text: #777171;
+  --accent-heading: #B94A50;
+  --accent-border: #B94A50;
+  --ring-color: rgba(185, 74, 80, 0.25);
+  --badge-bg: rgba(185, 74, 80, 0.12);
+  --badge-text: #B94A50;
+  --badge-border: rgba(185, 74, 80, 0.20);
   color-scheme: light;
 }
 
 html.dark,
 html[data-theme="dark"] {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --surface: #18181b;
-  --surface-subtle: #27272a;
-  --border-color: #27272a;
-  --card-bg: #121215;
-  --card-border: #27272a;
-  --muted-text: #a1a1aa;
+  /* Fallback compatibility tokens: --background: #09090b; */
+  --background: #151517;
+  --foreground: #F6F5F3;
+  --surface: #1E1E22;
+  --surface-subtle: #252429;
+  --border-color: #2E2C30;
+  --card-bg: #1E1E22;
+  --card-border: #2E2C30;
+  --primary: #B94A50;
+  --primary-hover: #C85A60;
+  --primary-active: #A13D43;
+  --primary-foreground: #F6F5F3;
+  --heading-text: #F6F5F3;
+  --muted-text: #A8A2A2;
+  --accent-heading: #D98C91;
+  --accent-border: #D98C91;
+  --ring-color: rgba(217, 140, 145, 0.25);
+  --badge-bg: rgba(217, 140, 145, 0.15);
+  --badge-text: #D98C91;
+  --badge-border: rgba(217, 140, 145, 0.25);
   color-scheme: dark;
 }
 
@@ -35,6 +59,19 @@ html[data-theme="dark"] {
   --color-surface: var(--surface);
   --color-surface-subtle: var(--surface-subtle);
   --color-border: var(--border-color);
+  --color-card: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-muted: var(--muted-text);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-heading: var(--heading-text);
+  --color-accent-heading: var(--accent-heading);
+  --color-accent-border: var(--accent-border);
+  --color-badge-bg: var(--badge-bg);
+  --color-badge-text: var(--badge-text);
+  --color-badge-border: var(--badge-border);
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }

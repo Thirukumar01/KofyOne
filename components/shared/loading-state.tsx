@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface LoadingStateProps {
@@ -16,7 +16,7 @@ export function LoadingState({ message = 'Loading...', className }: LoadingState
         className
       )}
     >
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-600 border-t-transparent dark:border-orange-400 dark:border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#B94A50] border-t-transparent dark:border-[#D98C91] dark:border-t-transparent" />
       <span className="mt-3 text-sm font-medium">{message}</span>
       <span className="sr-only">Loading content, please wait</span>
     </div>

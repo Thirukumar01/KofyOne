@@ -33,54 +33,54 @@ export default async function AboutPage() {
         </div>
 
         {/* Page Header */}
-        <div className="mb-10 rounded-2xl border border-zinc-200/80 bg-gradient-to-b from-zinc-50 to-white p-6 sm:p-10 shadow-xs dark:border-zinc-800 dark:from-zinc-900/60 dark:to-zinc-950">
-          <div className="flex items-center gap-2.5 text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
+        <div className="mb-10 rounded-2xl border border-[#F0DCDD] bg-white p-6 sm:p-10 shadow-xs dark:border-[#2E2C30] dark:bg-[#1E1E22] transition-colors">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-[#B94A50] dark:text-[#D98C91] uppercase tracking-wider">
             <Sparkles className="h-4 w-4" />
             Platform Overview
           </div>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#292526] dark:text-[#F6F5F3]">
             {page.title}
           </h1>
           {page.summary && (
-            <p className="mt-3 text-base sm:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            <p className="mt-3 text-base sm:text-lg text-[#777171] dark:text-[#A8A2A2] leading-relaxed">
               {page.summary}
             </p>
           )}
 
           {/* Value Highlights Grid */}
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-zinc-200/60 bg-white/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
-              <Compass className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <h3 className="mt-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">Multi-Cloud</h3>
-              <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">Microsoft, AWS, Google</p>
+            <div className="rounded-xl border border-[#F0DCDD] bg-[#FCECEB]/60 p-3.5 dark:border-[#2E2C30] dark:bg-[#252429]">
+              <Compass className="h-5 w-5 text-[#B94A50] dark:text-[#D98C91]" />
+              <h3 className="mt-2 text-xs font-bold text-[#292526] dark:text-[#F6F5F3]">Multi-Cloud</h3>
+              <p className="mt-0.5 text-[11px] text-[#777171] dark:text-[#A8A2A2]">Microsoft, AWS, Google</p>
             </div>
-            <div className="rounded-xl border border-zinc-200/60 bg-white/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
-              <GraduationCap className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <h3 className="mt-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">Student Free</h3>
-              <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">Credits, certs, sandboxes</p>
+            <div className="rounded-xl border border-[#F0DCDD] bg-[#FCECEB]/60 p-3.5 dark:border-[#2E2C30] dark:bg-[#252429]">
+              <GraduationCap className="h-5 w-5 text-[#B94A50] dark:text-[#D98C91]" />
+              <h3 className="mt-2 text-xs font-bold text-[#292526] dark:text-[#F6F5F3]">Student Free</h3>
+              <p className="mt-0.5 text-[11px] text-[#777171] dark:text-[#A8A2A2]">Credits, certs, sandboxes</p>
             </div>
-            <div className="rounded-xl border border-zinc-200/60 bg-white/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
-              <Code2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <h3 className="mt-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">Dev Tooling</h3>
-              <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">IDEs, AI, GitHub Packs</p>
+            <div className="rounded-xl border border-[#F0DCDD] bg-[#FCECEB]/60 p-3.5 dark:border-[#2E2C30] dark:bg-[#252429]">
+              <Code2 className="h-5 w-5 text-[#B94A50] dark:text-[#D98C91]" />
+              <h3 className="mt-2 text-xs font-bold text-[#292526] dark:text-[#F6F5F3]">Dev Tooling</h3>
+              <p className="mt-0.5 text-[11px] text-[#777171] dark:text-[#A8A2A2]">IDEs, AI, GitHub Packs</p>
             </div>
-            <div className="rounded-xl border border-zinc-200/60 bg-white/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
-              <Shield className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <h3 className="mt-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">Independent</h3>
-              <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">Community-curated</p>
+            <div className="rounded-xl border border-[#F0DCDD] bg-[#FCECEB]/60 p-3.5 dark:border-[#2E2C30] dark:bg-[#252429]">
+              <Shield className="h-5 w-5 text-[#B94A50] dark:text-[#D98C91]" />
+              <h3 className="mt-2 text-xs font-bold text-[#292526] dark:text-[#F6F5F3]">Independent</h3>
+              <p className="mt-0.5 text-[11px] text-[#777171] dark:text-[#A8A2A2]">Community-curated</p>
             </div>
           </div>
         </div>
 
         {/* Story Body */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 sm:p-10 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/40">
+        <div className="rounded-2xl border border-[#F0DCDD] bg-white p-6 sm:p-10 shadow-xs dark:border-[#2E2C30] dark:bg-[#1E1E22] transition-colors">
           <LegalContentViewer content={page.content} />
         </div>
 
         {/* CTA Footer */}
-        <div className="mt-10 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 p-8 text-center text-white shadow-md">
+        <div className="mt-10 rounded-2xl bg-[#B94A50] p-8 text-center text-white dark:text-[#F6F5F3] shadow-md">
           <h2 className="text-xl sm:text-2xl font-bold">Ready to Start Learning?</h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-orange-50">
+          <p className="mx-auto mt-2 max-w-xl text-sm text-white/90 dark:text-[#F6F5F3]/90">
             Explore hundreds of verified courses, developer programs, and cloud sandboxes right now.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">

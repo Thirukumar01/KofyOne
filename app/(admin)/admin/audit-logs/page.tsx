@@ -106,7 +106,7 @@ export default async function AdminAuditLogsPage() {
                 <tr key={log.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 font-mono">
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-900 dark:text-zinc-100">
-                      <Activity className="h-3.5 w-3.5 text-orange-500" />
+                      <Activity className="h-3.5 w-3.5 text-[#B94A50] dark:text-[#D98C91]" />
                       {log.action}
                     </span>
                   </td>

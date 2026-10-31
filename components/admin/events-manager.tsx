@@ -128,7 +128,7 @@ export function EventsManager({ initialEvents }: { initialEvents: StudentEvent[]
 
         <Button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-orange-600 hover:bg-orange-700 text-white text-xs flex items-center gap-1.5"
+          className="bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] text-white dark:text-[#F6F5F3] text-xs flex items-center gap-1.5"
         >
           <Plus className="h-4 w-4" />
           {showAddForm ? 'Cancel' : 'Add New Event'}
@@ -154,7 +154,7 @@ export function EventsManager({ initialEvents }: { initialEvents: StudentEvent[]
 
       {/* Expandable Add Form */}
       {showAddForm && (
-        <Card className="border-orange-200 bg-orange-50/20 dark:border-orange-900/50 dark:bg-orange-950/10">
+        <Card className="border-[#F0DCDD] bg-[#FCECEB]/50 dark:border-[#2E2C30] dark:bg-[#1E1E22]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-bold text-zinc-900 dark:text-zinc-100">
               Create New Student Event or Challenge
@@ -239,7 +239,7 @@ export function EventsManager({ initialEvents }: { initialEvents: StudentEvent[]
                   id="publish-check"
                   checked={isPublished}
                   onChange={(e) => setIsPublished(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
+                  className="h-4 w-4 rounded border-zinc-300 text-[#B94A50] focus:ring-[#B94A50]"
                 />
                 <label htmlFor="publish-check" className="font-medium cursor-pointer">
                   Publish immediately to public /events directory
@@ -259,7 +259,7 @@ export function EventsManager({ initialEvents }: { initialEvents: StudentEvent[]
                   type="submit"
                   size="sm"
                   disabled={loading}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] text-white"
                 >
                   {loading ? 'Creating...' : 'Save & Publish Event'}
                 </Button>
@@ -298,7 +298,7 @@ export function EventsManager({ initialEvents }: { initialEvents: StudentEvent[]
                     href={ev.official_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-orange-600 hover:underline flex items-center gap-1 font-medium"
+                    className="text-xs text-[#B94A50] hover:underline dark:text-[#D98C91] flex items-center gap-1 font-medium"
                   >
                     Official Link <ExternalLink className="h-3 w-3" />
                   </a>

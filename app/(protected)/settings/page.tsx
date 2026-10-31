@@ -334,7 +334,7 @@ function SettingsContent() {
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-20 text-center text-sm text-zinc-500">
-        <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-orange-500" />
+        <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-[#B94A50] dark:text-[#D98C91]" />
         Loading settings…
       </div>
     );
@@ -387,7 +387,7 @@ function SettingsContent() {
           onClick={() => setActiveTab('profile')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === 'profile'
-              ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+              ? 'border-[#B94A50] text-[#B94A50] dark:border-[#D98C91] dark:text-[#D98C91]'
               : 'border-transparent text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
           }`}
         >
@@ -399,7 +399,7 @@ function SettingsContent() {
           onClick={() => setActiveTab('appearance')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === 'appearance'
-              ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+              ? 'border-[#B94A50] text-[#B94A50] dark:border-[#D98C91] dark:text-[#D98C91]'
               : 'border-transparent text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
           }`}
         >
@@ -411,7 +411,7 @@ function SettingsContent() {
           onClick={() => setActiveTab('activity')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === 'activity'
-              ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+              ? 'border-[#B94A50] text-[#B94A50] dark:border-[#D98C91] dark:text-[#D98C91]'
               : 'border-transparent text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
           }`}
         >
@@ -428,7 +428,7 @@ function SettingsContent() {
           onClick={() => setActiveTab('security')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
             activeTab === 'security'
-              ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+              ? 'border-[#B94A50] text-[#B94A50] dark:border-[#D98C91] dark:text-[#D98C91]'
               : 'border-transparent text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
           }`}
         >
@@ -443,7 +443,7 @@ function SettingsContent() {
           <Card className="shadow-xs">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-orange-500" />
+                <Sparkles className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
                 Select Curated Preset Avatar
               </CardTitle>
               <CardDescription className="text-xs">
@@ -461,7 +461,7 @@ function SettingsContent() {
                       onClick={() => setSelectedAvatarId(avatar.id)}
                       className={`relative flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
                         isSelected
-                          ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-950/20 shadow-xs ring-2 ring-orange-500'
+                          ? 'border-[#B94A50] bg-[#FCECEB] dark:bg-[rgba(217,140,145,0.15)] shadow-xs ring-2 ring-[#B94A50] dark:ring-[#D98C91]'
                           : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900'
                       }`}
                     >
@@ -475,7 +475,7 @@ function SettingsContent() {
                         </div>
                       </div>
                       {isSelected && (
-                        <div className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-white">
+                        <div className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#B94A50] text-white">
                           <Check className="h-2.5 w-2.5" strokeWidth={3} />
                         </div>
                       )}
@@ -606,7 +606,7 @@ function SettingsContent() {
           <Card className="shadow-xs">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Palette className="h-4 w-4 text-orange-500" />
+                <Palette className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
                 Theme Engine & Color Scheme
               </CardTitle>
               <CardDescription className="text-xs">
@@ -643,7 +643,7 @@ function SettingsContent() {
                         onClick={() => setResourceSort(opt.id as typeof resourceSort)}
                         className={`p-3 rounded-xl border text-left text-xs transition-all ${
                           resourceSort === opt.id
-                            ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 ring-1 ring-orange-500 font-medium'
+                            ? 'border-[#B94A50] bg-[#FCECEB] dark:bg-[rgba(217,140,145,0.15)] ring-1 ring-[#B94A50] dark:ring-[#D98C91] font-medium'
                             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
                         }`}
                       >
@@ -664,7 +664,7 @@ function SettingsContent() {
                       onClick={() => setCardLayout('comfortable')}
                       className={`p-3 rounded-xl border text-left text-xs transition-all ${
                         cardLayout === 'comfortable'
-                          ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 ring-1 ring-orange-500 font-medium'
+                          ? 'border-[#B94A50] bg-[#FCECEB] dark:bg-[rgba(217,140,145,0.15)] ring-1 ring-[#B94A50] dark:ring-[#D98C91] font-medium'
                           : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
                       }`}
                     >
@@ -676,7 +676,7 @@ function SettingsContent() {
                       onClick={() => setCardLayout('compact')}
                       className={`p-3 rounded-xl border text-left text-xs transition-all ${
                         cardLayout === 'compact'
-                          ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 ring-1 ring-orange-500 font-medium'
+                          ? 'border-[#B94A50] bg-[#FCECEB] dark:bg-[rgba(217,140,145,0.15)] ring-1 ring-[#B94A50] dark:ring-[#D98C91] font-medium'
                           : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
                       }`}
                     >
@@ -717,7 +717,7 @@ function SettingsContent() {
                 <CardDescription className="text-xs">Saved Bookmarks</CardDescription>
                 <CardTitle className="text-2xl font-bold flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <Bookmark className="h-5 w-5 text-orange-500" />
+                    <Bookmark className="h-5 w-5 text-[#B94A50] dark:text-[#D98C91]" />
                     {favoritesCount} Favorites
                   </span>
                   <Link href="/favorites">
@@ -787,7 +787,7 @@ function SettingsContent() {
           <Card className="shadow-xs">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(185,74,80,0.12)] dark:bg-[rgba(217,140,145,0.15)] text-[#B94A50] dark:text-[#D98C91]">
                   <KeyRound className="h-5 w-5" />
                 </div>
                 <div>

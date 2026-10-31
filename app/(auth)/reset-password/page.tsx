@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
     <div className="mx-auto flex max-w-md flex-col justify-center px-4 py-16">
       <Card className="shadow-md">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(185,74,80,0.12)] dark:bg-[rgba(217,140,145,0.15)] text-[#B94A50] dark:text-[#D98C91]">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <CardTitle className="text-2xl font-bold">Set New Password</CardTitle>

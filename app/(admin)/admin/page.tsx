@@ -101,8 +101,8 @@ export default async function AdminDashboardPage() {
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/70">
           <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Total Clicks</p>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold tracking-tight text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
-              <MousePointerClick className="h-4 w-4 text-orange-500" />
+            <span className="text-2xl font-extrabold tracking-tight text-[#B94A50] dark:text-[#D98C91] flex items-center gap-1.5">
+              <MousePointerClick className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
               🔗 {totalClicks.toLocaleString()}
             </span>
             <span className="text-[10px] text-zinc-400">Referrals</span>
@@ -147,15 +147,15 @@ export default async function AdminDashboardPage() {
                 const Icon = MODULE_ICONS[item.href] || Layers;
                 return (
                   <Link key={item.href} href={item.href} className="group">
-                    <Card className="h-full border-zinc-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-500/50 hover:shadow-md dark:border-zinc-800 dark:hover:border-orange-500/50">
+                    <Card className="h-full border-zinc-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#B94A50]/50 hover:shadow-md dark:border-zinc-800 dark:hover:border-[#D98C91]/50">
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600 group-hover:bg-orange-500 group-hover:text-white dark:bg-orange-950/40 dark:text-orange-400 dark:group-hover:bg-orange-500 dark:group-hover:text-white transition-colors">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FCECEB] text-[#B94A50] group-hover:bg-[#B94A50] group-hover:text-white dark:bg-[#252429] dark:text-[#D98C91] dark:group-hover:bg-[#B94A50] dark:group-hover:text-white transition-colors">
                           <Icon className="h-5 w-5" />
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                        <ArrowUpRight className="h-4 w-4 text-zinc-400 group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors" />
                       </CardHeader>
                       <CardContent>
-                        <CardTitle className="text-base font-semibold group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                        <CardTitle className="text-base font-semibold group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors">
                           {item.title}
                         </CardTitle>
                         <CardDescription className="text-xs mt-1">

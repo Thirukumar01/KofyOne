@@ -159,7 +159,7 @@ export function AdminResourcesClient({
         </div>
 
         <Link href="/admin/resources/new">
-          <Button className="flex items-center gap-1.5 shadow-sm bg-orange-600 hover:bg-orange-700 text-white">
+          <Button className="flex items-center gap-1.5 shadow-sm bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] text-white">
             <Plus className="h-4 w-4" /> Add New Resource
           </Button>
         </Link>
@@ -269,7 +269,7 @@ export function AdminResourcesClient({
                               </span>
                               {resource.featured && <Badge variant="brand" className="text-[10px]">Featured</Badge>}
                               {isCustom && (
-                                <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-950/60 dark:text-orange-300">
+                                <span className="rounded bg-[rgba(185,74,80,0.12)] px-1.5 py-0.5 text-[10px] font-semibold text-[#B94A50] dark:bg-[rgba(217,140,145,0.15)] dark:text-[#D98C91]">
                                   Admin Added
                                 </span>
                               )}
@@ -288,7 +288,7 @@ export function AdminResourcesClient({
                         </span>
                         {resource.contributor_id && (
                           <span
-                            className="block text-[10px] text-orange-600 dark:text-orange-400 font-mono mt-0.5"
+                            className="block text-[10px] text-[#B94A50] dark:text-[#D98C91] font-mono mt-0.5"
                             title="Contributor ID"
                           >
                             ID: {resource.contributor_id}
@@ -344,7 +344,7 @@ export function AdminResourcesClient({
                             👁️ {Number(resource.view_count || 0).toLocaleString()} views
                           </span>
                           <span
-                            className="inline-flex items-center gap-1 rounded-md bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 text-[11px] font-semibold text-orange-700 dark:text-orange-300"
+                            className="inline-flex items-center gap-1 rounded-md bg-[rgba(185,74,80,0.12)] dark:bg-[rgba(217,140,145,0.15)] px-2 py-0.5 text-[11px] font-semibold text-[#B94A50] dark:text-[#D98C91]"
                             title="Total Outbound Clicks"
                           >
                             🔗 {Number(resource.click_count || 0).toLocaleString()} clicks
@@ -380,7 +380,7 @@ export function AdminResourcesClient({
                             target="_blank"
                             rel="noopener noreferrer"
                             title="Open Official Website"
-                            className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 p-1.5 text-xs font-medium text-zinc-600 hover:text-orange-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors"
+                            className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 p-1.5 text-xs font-medium text-zinc-600 hover:text-[#B94A50] dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-[#D98C91] transition-colors"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                           </a>
@@ -451,7 +451,7 @@ export function AdminResourcesClient({
           <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 space-y-5">
             <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-orange-600" />
+                <Eye className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
                 <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Resource Public Preview</h3>
               </div>
               <button
@@ -503,7 +503,7 @@ export function AdminResourcesClient({
                   href={`/go/${previewingResource.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-8 items-center justify-center rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white shadow-sm hover:bg-orange-700"
+                  className="inline-flex h-8 items-center justify-center rounded-lg bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] px-3 text-xs font-semibold text-white shadow-sm"
                 >
                   Open Destination
                 </a>

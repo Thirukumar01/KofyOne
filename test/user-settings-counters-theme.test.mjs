@@ -266,3 +266,31 @@ describe('5. Admin Navigation & Attribution Settings Hub', () => {
     assert.ok(content.includes("profile.role !== 'admin'"));
   });
 });
+
+describe('6. PostgreSQL Profiles Direct DB Persistence & Atomic RPC', () => {
+  const persistenceMigrationPath = path.resolve('supabase/migrations/20261031000000_fix_profile_db_persistence.sql');
+  const profileRoutePath = path.resolve('app/api/profile/route.ts');
+  const profileUpdateRoutePath = path.resolve('app/api/profile/update/route.ts');
+
+  test('migration 20261031000000_fix_profile_db_persistence.sql exists and defines upsert_my_profile', () => {
+    assert.ok(fs.existsSync(persistenceMigrationPath), 'Persistence migration file must exist');
+    const content = fs.readFileSync(persistenceMigrationPath, 'utf8');
+    assert.ok(content.includes('FUNCTION public.upsert_my_profile'), 'Must declare upsert_my_profile function');
+    assert.ok(content.includes('SECURITY DEFINER'), 'upsert_my_profile must be SECURITY DEFINER');
+    assert.ok(content.includes("SET search_path = ''"), 'search_path must be locked');
+    assert.ok(content.includes('GRANT EXECUTE ON FUNCTION public.upsert_my_profile'), 'Must grant execute to authenticated');
+    assert.ok(content.includes('handle_new_user_profile()'), 'Must update handle_new_user_profile trigger');
+    assert.ok(content.includes("NOTIFY pgrst, 'reload schema';"), 'Must notify PostgREST to reload schema');
+  });
+
+  test('profile routes use upsert_my_profile RPC as primary database persistence layer', () => {
+    const routeContent = fs.readFileSync(profileRoutePath, 'utf8');
+    assert.ok(routeContent.includes('upsert_my_profile'), 'API route must invoke upsert_my_profile RPC');
+    assert.ok(routeContent.includes("revalidatePath('/settings')"), 'API route must revalidate /settings path');
+    assert.ok(routeContent.includes("revalidatePath('/', 'layout')"), 'API route must revalidate root layout');
+
+    const updateRouteContent = fs.readFileSync(profileUpdateRoutePath, 'utf8');
+    assert.ok(updateRouteContent.includes('upsert_my_profile'), 'Update route must invoke upsert_my_profile RPC');
+    assert.ok(updateRouteContent.includes("revalidatePath('/settings')"), 'Update route must revalidate /settings path');
+  });
+});

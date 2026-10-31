@@ -148,7 +148,7 @@ export default function ForgotPasswordPage() {
     <div className="mx-auto flex max-w-md flex-col justify-center px-4 py-16">
       <Card className="shadow-md">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(185,74,80,0.12)] dark:bg-[rgba(217,140,145,0.15)] text-[#B94A50] dark:text-[#D98C91]">
             {stage === 'set_new_password' || stage === 'completed' ? (
               <ShieldCheck className="h-6 w-6" />
             ) : (
@@ -202,7 +202,7 @@ export default function ForgotPasswordPage() {
                   disabled={loading || isLockedOut}
                   value={selectedQuestionId}
                   onChange={(e) => setSelectedQuestionId(e.target.value)}
-                  className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+                  className="w-full rounded-md border border-[#F0DCDD] bg-[#FCECEB] px-3 py-2 text-sm text-[#292526] shadow-sm focus:border-[#B94A50] focus:outline-none focus:ring-1 focus:ring-[#B94A50] dark:border-[#2E2C30] dark:bg-[#252429] dark:text-[#F6F5F3] dark:focus:border-[#D98C91] dark:focus:ring-[#D98C91] transition-colors"
                 >
                   {PREDEFINED_SECURITY_QUESTIONS.map((q) => (
                     <option key={q.id} value={q.id}>
@@ -362,7 +362,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 href="/login"
-                className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white shadow hover:bg-orange-700 transition-colors"
+                className="inline-flex w-full items-center justify-center rounded-lg bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] px-4 py-2.5 text-sm font-medium text-white dark:text-[#F6F5F3] shadow transition-colors"
               >
                 Go to Sign In
               </Link>

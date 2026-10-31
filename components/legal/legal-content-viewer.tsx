@@ -179,7 +179,7 @@ function BlockRenderer({ block }: { block: Block }) {
       return <hr className="my-6 border-zinc-200 dark:border-zinc-800" />;
     case 'callout':
       return (
-        <div className="my-4 rounded-xl border-l-4 border-orange-500 bg-orange-50/50 p-4 dark:bg-orange-950/20 text-sm text-zinc-700 dark:text-zinc-300">
+        <div className="my-4 rounded-xl border-l-4 border-[#B94A50] bg-[#FCECEB] p-4 dark:border-[#D98C91] dark:bg-[#1E1E22] text-sm text-[#292526] dark:text-[#F6F5F3]">
           <InlineRenderer text={block.text} />
         </div>
       );
@@ -263,7 +263,7 @@ function InlineRenderer({ text }: { text: string }) {
           <Link
             key={keyIndex++}
             href={safeUrl}
-            className="font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline"
+            className="font-medium text-[#B94A50] hover:text-[#A13D43] dark:text-[#D98C91] dark:hover:text-[#F6F5F3] hover:underline"
           >
             {label}
           </Link>
@@ -275,7 +275,7 @@ function InlineRenderer({ text }: { text: string }) {
             href={safeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline"
+            className="font-medium text-[#B94A50] hover:text-[#A13D43] dark:text-[#D98C91] dark:hover:text-[#F6F5F3] hover:underline"
           >
             {label}
           </a>
@@ -293,7 +293,7 @@ function InlineRenderer({ text }: { text: string }) {
       parts.push(
         <code
           key={keyIndex++}
-          className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs text-orange-600 dark:bg-zinc-800 dark:text-orange-400"
+          className="rounded bg-[#FCECEB] px-1.5 py-0.5 font-mono text-xs text-[#B94A50] dark:bg-[#252429] dark:text-[#D98C91]"
         >
           {first.match[1]}
         </code>

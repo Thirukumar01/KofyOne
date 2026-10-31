@@ -27,11 +27,11 @@ export default async function PublicUpdatesPage() {
       </div>
 
       {/* Timeline List */}
-      <div className="relative border-l-2 border-orange-500/30 dark:border-orange-500/20 ml-3 pl-6 space-y-8">
+      <div className="relative border-l-2 border-[#B94A50]/30 dark:border-[#D98C91]/30 ml-3 pl-6 space-y-8">
         {updates.map((update) => (
           <div key={update.id || update.slug} className="relative group">
             {/* Timeline bullet dot */}
-            <div className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-orange-600 dark:border-zinc-900 ring-4 ring-orange-100 dark:ring-orange-950/60" />
+            <div className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#B94A50] dark:border-[#151517] ring-4 ring-[rgba(185,74,80,0.15)] dark:ring-[rgba(217,140,145,0.20)]" />
 
             <Card className="border-zinc-200 transition-all duration-200 hover:shadow-md dark:border-zinc-800">
               <CardHeader className="pb-2">

@@ -188,7 +188,7 @@ export default function SecuritySettingsPage() {
       <Card className="shadow-md">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(185,74,80,0.12)] dark:bg-[rgba(217,140,145,0.15)] text-[#B94A50] dark:text-[#D98C91]">
               <KeyRound className="h-5 w-5" />
             </div>
             <div>

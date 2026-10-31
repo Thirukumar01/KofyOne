@@ -122,7 +122,7 @@ export function UpdatesManager({ initialUpdates }: { initialUpdates: PlatformUpd
 
         <Button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-orange-600 hover:bg-orange-700 text-white text-xs flex items-center gap-1.5"
+          className="bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] text-white dark:text-[#F6F5F3] text-xs flex items-center gap-1.5"
         >
           <Plus className="h-4 w-4" />
           {showAddForm ? 'Cancel' : 'Add Platform Update'}
@@ -148,7 +148,7 @@ export function UpdatesManager({ initialUpdates }: { initialUpdates: PlatformUpd
 
       {/* Expandable Add Form */}
       {showAddForm && (
-        <Card className="border-orange-200 bg-orange-50/20 dark:border-orange-900/50 dark:bg-orange-950/10">
+        <Card className="border-[#F0DCDD] bg-[#FCECEB]/50 dark:border-[#2E2C30] dark:bg-[#1E1E22]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-bold text-zinc-900 dark:text-zinc-100">
               Create New Platform Update or Changelog
@@ -210,7 +210,7 @@ export function UpdatesManager({ initialUpdates }: { initialUpdates: PlatformUpd
                   id="publish-update-check"
                   checked={isPublished}
                   onChange={(e) => setIsPublished(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
+                  className="h-4 w-4 rounded border-zinc-300 text-[#B94A50] focus:ring-[#B94A50]"
                 />
                 <label htmlFor="publish-update-check" className="font-medium cursor-pointer">
                   Publish immediately to public /updates changelog
@@ -230,7 +230,7 @@ export function UpdatesManager({ initialUpdates }: { initialUpdates: PlatformUpd
                   type="submit"
                   size="sm"
                   disabled={loading}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] text-white"
                 >
                   {loading ? 'Publishing...' : 'Save & Publish Update'}
                 </Button>
@@ -247,7 +247,7 @@ export function UpdatesManager({ initialUpdates }: { initialUpdates: PlatformUpd
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(185,74,80,0.12)] text-[#B94A50] dark:bg-[rgba(217,140,145,0.15)] dark:text-[#D98C91]">
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div>

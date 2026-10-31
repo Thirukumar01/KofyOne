@@ -353,7 +353,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                     variant="outline"
                     onClick={handleFetchMetadata}
                     disabled={fetchingMetadata || !officialUrl}
-                    className="flex items-center gap-1.5 shrink-0 text-xs text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40"
+                    className="flex items-center gap-1.5 shrink-0 text-xs text-[#B94A50] dark:text-[#D98C91] hover:bg-[#FCECEB] dark:hover:bg-[#252429]"
                     title="Fetch title, description, and images from website"
                   >
                     {fetchingMetadata ? (
@@ -416,7 +416,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                         setContributorId('');
                       }
                     }}
-                    className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                    className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:border-[#B94A50] focus:ring-1 focus:ring-[#B94A50] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#D98C91] dark:focus:ring-[#D98C91]"
                   >
                     {platforms.map((p) => (
                       <option key={p.slug} value={p.slug}>
@@ -433,7 +433,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                   <select
                     value={categorySlug}
                     onChange={(e) => setCategorySlug(e.target.value)}
-                    className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                    className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:border-[#B94A50] focus:ring-1 focus:ring-[#B94A50] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#D98C91] dark:focus:ring-[#D98C91]"
                   >
                     {categories.map((c) => (
                       <option key={c.slug} value={c.slug}>
@@ -471,10 +471,10 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
 
               {/* Microsoft-Only Contributor ID Section */}
               {isMicrosoft ? (
-                <div className="rounded-xl border border-orange-200 bg-orange-50/50 p-4 dark:border-orange-950/60 dark:bg-orange-950/30 space-y-2">
+                <div className="rounded-xl border border-[#F0DCDD] bg-[#FCECEB]/50 p-4 dark:border-[#2E2C30] dark:bg-[#1E1E22] space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-orange-900 dark:text-orange-300 flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-orange-600" /> Microsoft Contributor ID (wt.mc_id)
+                    <label className="text-xs font-bold text-[#292526] dark:text-[#F6F5F3] flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-[#B94A50] dark:text-[#D98C91]" /> Microsoft Contributor ID (wt.mc_id)
                     </label>
                     <Badge variant="brand" className="text-[10px]">
                       Microsoft Only
@@ -487,7 +487,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                     className="bg-white dark:bg-zinc-900"
                   />
                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Attached as <code className="font-mono text-orange-600 dark:text-orange-400">?wt.mc_id=...</code> when users open official Microsoft pages. Never attached to AWS, Google, or other non-Microsoft platforms.
+                    Attached as <code className="font-mono text-[#B94A50] dark:text-[#D98C91]">?wt.mc_id=...</code> when users open official Microsoft pages. Never attached to AWS, Google, or other non-Microsoft platforms.
                   </p>
                 </div>
               ) : (
@@ -507,7 +507,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                   rows={3}
                   required
                   placeholder="Clear description of the learning platform, features, and eligibility..."
-                  className="w-full rounded-lg border border-zinc-300 bg-white p-3 text-sm text-zinc-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-[#F0DCDD] bg-[#FCECEB] p-3 text-sm text-[#292526] focus:border-[#B94A50] focus:ring-1 focus:ring-[#B94A50] dark:border-[#2E2C30] dark:bg-[#252429] dark:text-[#F6F5F3] dark:focus:border-[#D98C91] dark:focus:ring-[#D98C91] transition-colors"
                 />
               </div>
 
@@ -584,7 +584,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                         onClick={() => setLogoUrl(preset.url)}
                         className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
                           logoUrl === preset.url
-                            ? 'border-orange-500 bg-orange-50 text-orange-700 dark:border-orange-600 dark:bg-orange-950/50 dark:text-orange-300'
+                            ? 'border-[#B94A50] bg-[rgba(185,74,80,0.12)] text-[#B94A50] dark:border-[#D98C91] dark:bg-[rgba(217,140,145,0.15)] dark:text-[#D98C91]'
                             : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
                         }`}
                       >
@@ -602,7 +602,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                     type="checkbox"
                     checked={featured}
                     onChange={(e) => setFeatured(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 dark:border-zinc-700"
+                    className="h-4 w-4 rounded border-zinc-300 text-[#B94A50] focus:ring-[#B94A50] dark:border-zinc-700"
                   />
                   <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                     Mark as Featured Resource
@@ -614,7 +614,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
                     type="checkbox"
                     checked={isPublished}
                     onChange={(e) => setIsPublished(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 dark:border-zinc-700"
+                    className="h-4 w-4 rounded border-zinc-300 text-[#B94A50] focus:ring-[#B94A50] dark:border-zinc-700"
                   />
                   <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                     Published (Uncheck to save as Draft)
@@ -637,7 +637,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
             <Button
               type="submit"
               disabled={submitting || Boolean(uploadingImage)}
-              className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm flex items-center gap-2"
+              className="bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] text-white shadow-sm flex items-center gap-2"
             >
               {submitting ? (
                 <>
@@ -715,7 +715,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
               {isMicrosoft && contributorId && (
                 <div className="flex justify-between">
                   <span>Tracking:</span>
-                  <span className="font-mono text-[10px] text-orange-600 dark:text-orange-400">
+                  <span className="font-mono text-[10px] text-[#B94A50] dark:text-[#D98C91]">
                     {contributorId}
                   </span>
                 </div>

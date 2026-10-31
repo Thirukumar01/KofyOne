@@ -29,17 +29,17 @@ export default async function HomePage() {
           {branding.app_name}
         </h1>
 
-        <p className="mt-4 text-xl font-medium text-orange-600 sm:text-2xl dark:text-orange-400">
+        <p className="mt-4 text-xl font-medium text-[#B94A50] sm:text-2xl dark:text-[#D98C91]">
           {branding.tagline}
         </p>
 
-        <p className="mt-4 max-w-2xl text-base text-zinc-600 dark:text-zinc-400">
+        <p className="mt-4 max-w-2xl text-base text-[#777171] dark:text-[#A8A2A2]">
           {branding.description}
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/resources">
-            <Button size="lg" className="shadow-md bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2">
+            <Button size="lg" className="shadow-md bg-[#B94A50] hover:bg-[#A13D43] active:bg-[#8D3338] dark:hover:bg-[#C85A60] text-white dark:text-[#F6F5F3] flex items-center gap-2">
               Explore All Resources <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -69,17 +69,17 @@ export default async function HomePage() {
               <Link
                 key={platform.slug}
                 href={`/resources?provider=${platform.slug}`}
-                className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm hover:border-orange-500 hover:shadow-md transition-all dark:border-zinc-800 dark:bg-zinc-900"
+                className="group rounded-2xl border border-[#F0DCDD] bg-white p-5 shadow-sm hover:border-[#B94A50] hover:shadow-md transition-all dark:border-[#2E2C30] dark:bg-[#1E1E22] dark:hover:border-[#D98C91]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-base text-zinc-900 dark:text-zinc-100 group-hover:text-orange-600 transition-colors">
+                  <span className="font-bold text-base text-[#292526] dark:text-[#F6F5F3] group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors">
                     {platform.name}
                   </span>
                   <Badge variant="outline" className="text-[10px]">
                     {count} {count === 1 ? 'Resource' : 'Resources'}
                   </Badge>
                 </div>
-                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                <p className="mt-2 text-xs text-[#777171] dark:text-[#A8A2A2] line-clamp-2">
                   {platform.description || `Official ${platform.name} resources and learning tools.`}
                 </p>
               </Link>
@@ -102,7 +102,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/resources"
-              className="text-xs font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 flex items-center gap-1"
+              className="text-xs font-semibold text-[#B94A50] hover:text-[#A13D43] dark:text-[#D98C91] flex items-center gap-1"
             >
               View all <ArrowRight className="h-3.5 w-3.5" />
             </Link>

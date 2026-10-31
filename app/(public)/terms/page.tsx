@@ -38,39 +38,39 @@ export default async function TermsPage() {
             Back to Home
           </Link>
           {formattedDate && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400">
-              <Calendar className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#F0DCDD] dark:border-[#2E2C30] bg-[#FCECEB] dark:bg-[#252429] px-3 py-1 text-xs text-[#777171] dark:text-[#A8A2A2]">
+              <Calendar className="h-3 w-3 text-[#B94A50] dark:text-[#D98C91]" />
               Effective: {formattedDate}
             </div>
           )}
         </div>
 
         {/* Page Header */}
-        <div className="mb-10 rounded-2xl border border-zinc-200/80 bg-gradient-to-b from-zinc-50 to-white p-6 sm:p-10 shadow-xs dark:border-zinc-800 dark:from-zinc-900/60 dark:to-zinc-950">
-          <div className="flex items-center gap-2.5 text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
+        <div className="mb-10 rounded-2xl border border-[#F0DCDD] bg-white p-6 sm:p-10 shadow-xs dark:border-[#2E2C30] dark:bg-[#1E1E22] transition-colors">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-[#B94A50] dark:text-[#D98C91] uppercase tracking-wider">
             <ShieldCheck className="h-4 w-4" />
             Legal Agreement
           </div>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#292526] dark:text-[#F6F5F3]">
             {page.title}
           </h1>
           {page.summary && (
-            <p className="mt-3 text-base sm:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            <p className="mt-3 text-base sm:text-lg text-[#777171] dark:text-[#A8A2A2] leading-relaxed">
               {page.summary}
             </p>
           )}
         </div>
 
         {/* Policy Body */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 sm:p-10 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/40">
+        <div className="rounded-2xl border border-[#F0DCDD] bg-white p-6 sm:p-10 shadow-xs dark:border-[#2E2C30] dark:bg-[#1E1E22] transition-colors">
           <LegalContentViewer content={page.content} />
         </div>
 
         {/* Footer Support Notice */}
-        <div className="mt-10 rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/60">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="mt-10 rounded-xl border border-[#F0DCDD] bg-[#FCECEB]/50 p-6 text-center dark:border-[#2E2C30] dark:bg-[#252429]/50">
+          <p className="text-sm text-[#777171] dark:text-[#A8A2A2]">
             Have questions regarding these terms? Reach out through our{' '}
-            <Link href="/contact" className="font-semibold text-orange-600 dark:text-orange-400 hover:underline">
+            <Link href="/contact" className="font-semibold text-[#B94A50] dark:text-[#D98C91] hover:underline">
               Contact & Support Portal
             </Link>
             .

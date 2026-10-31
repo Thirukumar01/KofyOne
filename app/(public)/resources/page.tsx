@@ -180,8 +180,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
                 }).toString()}`}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap ${
                   isSelected
-                    ? 'bg-orange-600 text-white font-semibold'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'
+                    ? 'bg-[#B94A50] text-white dark:text-[#F6F5F3] font-semibold'
+                    : 'bg-[#FCECEB] text-[#777171] hover:bg-[#F0DCDD] dark:bg-[#252429] dark:text-[#A8A2A2]'
                 }`}
               >
                 {p.name} {count > 0 && `(${count})`}
@@ -191,12 +191,12 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
       </div>
 
       {/* Search & Filter Form */}
-      <form className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:grid-cols-[1fr_auto_auto_auto_auto]">
+      <form className="grid gap-3 rounded-2xl border border-[#F0DCDD] bg-white p-4 shadow-sm dark:border-[#2E2C30] dark:bg-[#1E1E22] sm:grid-cols-[1fr_auto_auto_auto_auto] transition-colors">
         {/* Hidden Provider so selecting category preserves provider */}
         {provider && <input type="hidden" name="provider" value={provider} />}
 
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#777171] dark:text-[#A8A2A2]" />
           <Input
             name="q"
             defaultValue={query}
@@ -209,7 +209,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
           <select
             name="category"
             defaultValue={category}
-            className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-xs text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 sm:w-44"
+            className="h-10 w-full rounded-lg border border-[#F0DCDD] bg-[#FCECEB] px-3 text-xs text-[#292526] dark:border-[#2E2C30] dark:bg-[#252429] dark:text-[#F6F5F3] sm:w-44 transition-colors"
           >
             <option value="">All categories</option>
             {categories.map((item) => (
@@ -224,7 +224,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
           <select
             name="sort"
             defaultValue={sort}
-            className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-xs text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 sm:w-36"
+            className="h-10 w-full rounded-lg border border-[#F0DCDD] bg-[#FCECEB] px-3 text-xs text-[#292526] dark:border-[#2E2C30] dark:bg-[#252429] dark:text-[#F6F5F3] sm:w-36 transition-colors"
           >
             <option value="featured">Featured First</option>
             <option value="popular">Most Popular</option>
@@ -233,7 +233,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
           </select>
         </div>
 
-        <Button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white">
+        <Button type="submit">
           Filter
         </Button>
 

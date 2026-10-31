@@ -341,14 +341,14 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
         {status === 'loading' && (
           <div className="flex flex-col items-center justify-center gap-1 py-1 text-xs text-zinc-500 dark:text-zinc-400">
             <div className="flex items-center gap-2">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-500" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-[#B94A50] dark:text-[#D98C91]" />
               <span>Verifying browser security environment…</span>
             </div>
             {showStuckRetry && (
               <button
                 type="button"
                 onClick={handleReset}
-                className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-orange-600 hover:underline dark:text-orange-400"
+                className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-[#B94A50] hover:underline dark:text-[#D98C91]"
               >
                 <RefreshCw className="h-3 w-3" />
                 Taking too long? Click here to retry
@@ -364,7 +364,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
             <button
               type="button"
               onClick={handleReset}
-              className="font-semibold text-orange-600 hover:underline dark:text-orange-400 flex items-center gap-1 ml-1"
+              className="font-semibold text-[#B94A50] hover:underline dark:text-[#D98C91] flex items-center gap-1 ml-1"
             >
               <RefreshCw className="h-3 w-3" />
               Retry

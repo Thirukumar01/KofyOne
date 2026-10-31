@@ -28,7 +28,7 @@ export default function AccessDeniedPage() {
               Why am I seeing this?
             </p>
             <p>
-              The area you attempted to visit requires an assigned <span className="font-semibold text-orange-600 dark:text-orange-400">admin</span> role in the KofyOne system.
+              The area you attempted to visit requires an assigned <span className="font-semibold text-[#B94A50] dark:text-[#D98C91]">admin</span> role in the KofyOne system.
             </p>
             <p>
               If you are a member of the administration team, ensure your user UUID is granted administrator authorization in the database.

@@ -115,8 +115,8 @@ export default async function AdminAnalyticsPage() {
         <Card className="shadow-xs">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs">Outbound Clicks</CardDescription>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2 text-orange-600 dark:text-orange-400">
-              <MousePointerClick className="h-5 w-5 text-orange-500" />
+            <CardTitle className="text-2xl font-bold flex items-center gap-2 text-[#B94A50] dark:text-[#D98C91]">
+              <MousePointerClick className="h-5 w-5 text-[#B94A50] dark:text-[#D98C91]" />
               🔗 {totalClicks.toLocaleString()}
             </CardTitle>
           </CardHeader>
@@ -199,7 +199,7 @@ export default async function AdminAnalyticsPage() {
                           {res.platform?.name ?? 'Microsoft'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-orange-600 dark:text-orange-400 font-bold">
+                      <td className="px-4 py-3 text-right text-[#B94A50] dark:text-[#D98C91] font-bold">
                         🔗 {rClicks.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-right text-zinc-600 dark:text-zinc-300">
@@ -223,7 +223,7 @@ export default async function AdminAnalyticsPage() {
         <Card className="shadow-xs">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-orange-600" />
+              <Globe className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
               <CardTitle className="text-base">Breakdown by Ecosystem</CardTitle>
             </div>
             <CardDescription className="text-xs">
@@ -243,7 +243,7 @@ export default async function AdminAnalyticsPage() {
                     </div>
                   </div>
                   <div className="text-right text-xs space-y-0.5 font-mono">
-                    <div className="font-semibold text-orange-600 dark:text-orange-400">
+                    <div className="font-semibold text-[#B94A50] dark:text-[#D98C91]">
                       🔗 {stat.clicks.toLocaleString()} clicks
                     </div>
                     <div className="text-zinc-400">👁️ {stat.views.toLocaleString()} views ({stat.ctr}% CTR)</div>
@@ -278,7 +278,7 @@ export default async function AdminAnalyticsPage() {
                     </div>
                   </div>
                   <div className="text-right text-xs space-y-0.5 font-mono">
-                    <div className="font-semibold text-orange-600 dark:text-orange-400">
+                    <div className="font-semibold text-[#B94A50] dark:text-[#D98C91]">
                       🔗 {stat.clicks.toLocaleString()} clicks
                     </div>
                     <div className="text-zinc-400">👁️ {stat.views.toLocaleString()} views</div>

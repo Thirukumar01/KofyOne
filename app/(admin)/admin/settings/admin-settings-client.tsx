@@ -135,7 +135,7 @@ export function AdminSettingsClient({
             <CardDescription className="text-xs">Database Connection</CardDescription>
             <CardTitle className="text-base flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-orange-500" />
+                <Database className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
                 PostgreSQL (Supabase)
               </span>
               {systemHealth.dbConnected ? (
@@ -202,7 +202,7 @@ export function AdminSettingsClient({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-orange-500" />
+                  <Globe className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
                   Contributor Tracking & Attribution Manager
                 </CardTitle>
                 <CardDescription className="text-xs mt-1">
@@ -260,7 +260,7 @@ export function AdminSettingsClient({
                         type="checkbox"
                         checked={cfg.isEnabled}
                         onChange={(e) => handleTrackingChange(idx, 'isEnabled', e.target.checked)}
-                        className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
+                        className="h-4 w-4 rounded border-zinc-300 text-[#B94A50] focus:ring-[#B94A50] dark:border-zinc-700 dark:text-[#D98C91] dark:focus:ring-[#D98C91]"
                       />
                       <span className="font-medium text-zinc-700 dark:text-zinc-300">
                         {cfg.isEnabled ? 'Active' : 'Disabled'}
@@ -310,7 +310,7 @@ export function AdminSettingsClient({
                     type="checkbox"
                     checked={showFeaturedOnly}
                     onChange={(e) => setShowFeaturedOnly(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
+                    className="h-4 w-4 rounded border-zinc-300 text-[#B94A50] focus:ring-[#B94A50] dark:border-zinc-700 dark:text-[#D98C91] dark:focus:ring-[#D98C91]"
                   />
                   <span className="font-semibold text-zinc-800 dark:text-zinc-200">
                     Filter by Featured Only by Default
@@ -323,7 +323,7 @@ export function AdminSettingsClient({
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 space-y-3 bg-zinc-50/50 dark:bg-zinc-900/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Megaphone className="h-4 w-4 text-orange-500" />
+                  <Megaphone className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
                   <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                     Announcement Banner
                   </span>
@@ -333,7 +333,7 @@ export function AdminSettingsClient({
                     type="checkbox"
                     checked={bannerEnabled}
                     onChange={(e) => setBannerEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
+                    className="h-4 w-4 rounded border-zinc-300 text-[#B94A50] focus:ring-[#B94A50] dark:border-zinc-700 dark:text-[#D98C91] dark:focus:ring-[#D98C91]"
                   />
                   <span className="font-medium text-zinc-700 dark:text-zinc-300">
                     {bannerEnabled ? 'Enabled' : 'Hidden'}

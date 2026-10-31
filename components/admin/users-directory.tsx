@@ -178,7 +178,7 @@ export function UsersDirectory({ initialUsers, currentAdminId }: UsersDirectoryP
                           <div className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
                             {displayName}
                             {isCurrent && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1 border-orange-300 text-orange-600 dark:text-orange-400">
+                              <Badge variant="outline" className="text-[10px] py-0 px-1 border-[#B94A50]/40 text-[#B94A50] dark:text-[#D98C91]">
                                 You
                               </Badge>
                             )}
@@ -204,7 +204,7 @@ export function UsersDirectory({ initialUsers, currentAdminId }: UsersDirectoryP
                       <Badge
                         variant={isAdmin ? 'brand' : 'outline'}
                         className={`capitalize text-xs flex items-center gap-1 w-fit ${
-                          isAdmin ? 'bg-orange-600 text-white' : ''
+                          isAdmin ? 'bg-[#B94A50] text-white dark:text-[#F6F5F3]' : ''
                         }`}
                       >
                         {isAdmin ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
