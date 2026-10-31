@@ -95,3 +95,4 @@ describe('Admin CRUD, Blacklist & RPC Persistence Test Suite', () => {
     assert.ok(content.includes('/go/${resource.slug}'));
   });
 });
+

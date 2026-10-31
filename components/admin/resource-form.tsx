@@ -222,6 +222,7 @@ export function ResourceForm({ initialResource, categories, platforms }: Resourc
       .filter(Boolean);
 
     const payload = {
+      ...(isEditing && initialResource?.id ? { id: initialResource.id, original_slug: initialResource.slug } : {}),
       name,
       slug: slug || slugify(name),
       official_url: officialUrl,

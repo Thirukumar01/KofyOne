@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit -p tsconfig.check.json",
-    "test": "node --test test/username-pin-auth.test.mjs test/auth-security.test.mjs test/secure-auth-system.test.mjs test/admin-cms-branding-providers.test.mjs test/legal-and-site-pages.test.mjs test/cloudflare-turnstile.test.mjs test/user-settings-counters-theme.test.mjs test/phase7-catalog-engagement.test.mjs test/admin-crud-and-counters.test.mjs",
+    "test": "node --test test/username-pin-auth.test.mjs test/auth-security.test.mjs test/secure-auth-system.test.mjs test/admin-cms-branding-providers.test.mjs test/legal-and-site-pages.test.mjs test/cloudflare-turnstile.test.mjs test/user-settings-counters-theme.test.mjs test/phase7-catalog-engagement.test.mjs test/admin-crud-and-counters.test.mjs test/admin-full-control.test.mjs",
     "dev:vinext": "vite dev --port 3001",
     "build:vinext": "vite build",
     "start:vinext": "vite preview",

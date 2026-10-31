@@ -10,6 +10,15 @@ import type { ResourceWithRelations } from '@/types/resource';
 
 export const dynamic = 'force-dynamic';
 
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -54,6 +63,7 @@ export async function PUT(
 
     const body = await request.json();
     const name = typeof body.name === 'string' ? body.name.trim() : existing.name;
+    const slug = typeof body.slug === 'string' && body.slug.trim() ? slugify(body.slug) : existing.slug;
     const description = typeof body.description === 'string' ? body.description.trim() : existing.description;
     const official_url = typeof body.official_url === 'string' ? body.official_url.trim() : existing.official_url;
     const platform_slug = typeof body.platform_slug === 'string'
@@ -110,6 +120,7 @@ export async function PUT(
 
     const updates: Partial<ResourceWithRelations> = {
       name,
+      slug,
       description,
       official_url,
       logo_url,
@@ -152,7 +163,8 @@ export async function PUT(
       ) => Promise<unknown>)('admin_save_resource', {
         p_payload: {
           id: existing.id,
-          slug: existing.slug,
+          original_slug: existing.slug,
+          slug,
           ...updates,
           platform_slug: matchedPlatform.slug,
           category_slug: matchedCategory.slug,
@@ -203,6 +215,11 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const existing = await getResourceByIdOrSlug(id);
+    const identifiersToDelete = [id];
+    if (existing?.slug && existing.slug !== id) {
+      identifiersToDelete.push(existing.slug);
+    }
 
     // Call atomic RPC
     try {
@@ -210,12 +227,16 @@ export async function DELETE(
       await (supabase.rpc as unknown as (
         fn: string,
         args: { p_identifier: string }
-      ) => Promise<unknown>)('admin_delete_resource', { p_identifier: id });
+      ) => Promise<unknown>)('admin_delete_resource', { p_identifier: identifiersToDelete.join(',') });
     } catch {
       // Non-fatal
     }
 
-    const deleted = await deleteResourceById(id);
+    let deleted = false;
+    for (const ident of identifiersToDelete) {
+      const resDel = await deleteResourceById(ident);
+      if (resDel) deleted = true;
+    }
 
     await recordAuditLog({
       action: 'delete_resource',

@@ -214,40 +214,53 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    let id = searchParams.get('id');
+    const idParam = searchParams.get('id');
+    let ids: string[] = [];
 
-    if (!id) {
+    if (idParam) {
+      ids.push(idParam.trim());
+    } else {
       try {
         const body = await request.json();
-        id = body.id || body.slug || body.identifier;
+        if (Array.isArray(body.ids)) {
+          ids = body.ids.map((x: unknown) => String(x).trim()).filter(Boolean);
+        } else if (body.id || body.slug || body.identifier) {
+          const singleId = String(body.id || body.slug || body.identifier).trim();
+          ids.push(singleId);
+          if (body.slug && String(body.slug).trim() !== singleId) {
+            ids.push(String(body.slug).trim());
+          }
+        }
       } catch {
         // body not present
       }
     }
 
-    if (!id) {
-      return NextResponse.json({ error: 'Resource identifier is required.' }, { status: 400 });
+    if (ids.length === 0) {
+      return NextResponse.json({ error: 'Resource identifier(s) required.' }, { status: 400 });
     }
 
-    // Call atomic admin_delete_resource
+    // Call atomic admin_delete_resource (supports comma-separated list of IDs / slugs)
     try {
       const supabase = hasAdminCredentials() ? createAdminClient() : await createClient();
       await (supabase.rpc as unknown as (
         fn: string,
         args: { p_identifier: string }
-      ) => Promise<unknown>)('admin_delete_resource', { p_identifier: id });
+      ) => Promise<unknown>)('admin_delete_resource', { p_identifier: ids.join(',') });
     } catch {
       // Fallback
     }
 
-    deleteResourceById(id);
-    deleteCustomResource(id);
+    for (const item of ids) {
+      deleteResourceById(item);
+      deleteCustomResource(item);
+    }
 
     await recordAuditLog({
       action: 'delete_resource',
       entityType: 'resource',
-      entityId: id,
-      details: { deleted: true },
+      entityId: ids.join(','),
+      details: { deleted: true, count: ids.length },
       actorId: profile.id,
     });
 
@@ -259,7 +272,7 @@ export async function DELETE(request: Request) {
       // Non-fatal
     }
 
-    return NextResponse.json({ success: true, deleted: true });
+    return NextResponse.json({ success: true, deleted: true, count: ids.length });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to delete resource.' },

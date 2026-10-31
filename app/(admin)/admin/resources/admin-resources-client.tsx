@@ -21,6 +21,9 @@ import {
   AlertTriangle,
   X,
   CheckCircle2,
+  CheckSquare,
+  Square,
+  MinusSquare,
 } from 'lucide-react';
 
 export interface AdminResourcesClientProps {
@@ -43,7 +46,12 @@ export function AdminResourcesClient({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'published' | 'draft'>('all');
 
-  // Delete Dialog state
+  // Multi-selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Single Delete Dialog state
   const [deletingResource, setDeletingResource] = useState<ResourceWithRelations | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -81,6 +89,46 @@ export function AdminResourcesClient({
     return true;
   });
 
+  // Selection handlers
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((r) => selectedIds.has(r.id));
+  const someFilteredSelected =
+    filtered.some((r) => selectedIds.has(r.id)) && !allFilteredSelected;
+
+  function handleToggleSelectAll() {
+    if (allFilteredSelected) {
+      // Unselect all currently filtered
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((r) => next.delete(r.id));
+        return next;
+      });
+    } else {
+      // Select all currently filtered
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((r) => next.add(r.id));
+        return next;
+      });
+    }
+  }
+
+  function handleToggleSelectRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function handleDeselectAll() {
+    setSelectedIds(new Set());
+  }
+
   async function handleDeleteConfirm() {
     if (!deletingResource) return;
     setIsDeleting(true);
@@ -88,8 +136,10 @@ export function AdminResourcesClient({
     setActionSuccess('');
 
     try {
-      const res = await fetch(`/api/admin/resources/${deletingResource.id}`, {
+      const res = await fetch('/api/admin/resources', {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deletingResource.id, slug: deletingResource.slug }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -97,13 +147,57 @@ export function AdminResourcesClient({
       }
 
       setResources((prev) => prev.filter((r) => r.id !== deletingResource.id));
-      setActionSuccess(`Resource "${deletingResource.name}" deleted successfully.`);
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(deletingResource.id);
+        return next;
+      });
+      setActionSuccess(`Resource "${deletingResource.name}" permanently deleted.`);
       setDeletingResource(null);
       router.refresh();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Delete failed.');
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleBulkDeleteConfirm() {
+    if (selectedIds.size === 0) return;
+    setIsBulkDeleting(true);
+    setActionError('');
+    setActionSuccess('');
+
+    try {
+      const targetIds = Array.from(selectedIds);
+      // Collect both IDs and slugs for selected resources to guarantee complete tombstoning
+      const targetItems = resources.filter((r) => selectedIds.has(r.id));
+      const identifiers = new Set<string>();
+      targetItems.forEach((r) => {
+        identifiers.add(r.id);
+        if (r.slug) identifiers.add(r.slug);
+      });
+
+      const res = await fetch('/api/admin/resources', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(identifiers) }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete selected resources.');
+      }
+
+      setResources((prev) => prev.filter((r) => !selectedIds.has(r.id)));
+      setActionSuccess(`Successfully deleted ${targetIds.length} resources.`);
+      setSelectedIds(new Set());
+      setShowBulkDeleteModal(false);
+      router.refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Bulk delete failed.');
+    } finally {
+      setIsBulkDeleting(false);
     }
   }
 
@@ -158,12 +252,39 @@ export function AdminResourcesClient({
           )}
         </div>
 
-        <Link href="/admin/resources/new">
-          <Button className="flex items-center gap-1.5 shadow-sm bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] text-white">
-            <Plus className="h-4 w-4" /> Add New Resource
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/resources/new">
+            <Button className="flex items-center gap-1.5 shadow-sm bg-[#B94A50] hover:bg-[#A13D43] dark:hover:bg-[#C85A60] active:bg-[#8D3338] text-white">
+              <Plus className="h-4 w-4" /> Add New Resource
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Bulk Action Toolbar if any row is selected */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-[#B94A50]/30 bg-[#FFF5F4] p-3 text-sm text-[#292526] dark:border-[#D98C91]/30 dark:bg-[#1E1E22] dark:text-[#F6F5F3] shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold text-xs sm:text-sm">
+              {selectedIds.size} {selectedIds.size === 1 ? 'resource' : 'resources'} selected
+            </span>
+            <button
+              type="button"
+              onClick={handleDeselectAll}
+              className="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline"
+            >
+              Deselect All
+            </button>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setShowBulkDeleteModal(true)}
+            className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 shadow-sm"
+          >
+            <Trash2 className="h-4 w-4" /> Delete Selected ({selectedIds.size})
+          </Button>
+        </div>
+      )}
 
       {/* Filters Toolbar */}
       <div className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:grid-cols-[1fr_auto_auto_auto]">
@@ -230,7 +351,23 @@ export function AdminResourcesClient({
           <table className="w-full text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50/75 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-400">
               <tr>
-                <th className="px-6 py-4">Resource</th>
+                <th className="px-4 py-4 w-10">
+                  <button
+                    type="button"
+                    onClick={handleToggleSelectAll}
+                    title={allFilteredSelected ? 'Deselect all' : 'Select all'}
+                    className="flex items-center justify-center text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  >
+                    {allFilteredSelected ? (
+                      <CheckSquare className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
+                    ) : someFilteredSelected ? (
+                      <MinusSquare className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
+                    ) : (
+                      <Square className="h-4 w-4" />
+                    )}
+                  </button>
+                </th>
+                <th className="px-4 py-4">Resource</th>
                 <th className="px-6 py-4">Provider</th>
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4">Status</th>
@@ -241,20 +378,40 @@ export function AdminResourcesClient({
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
                     No resources matched your search or filter criteria.
                   </td>
                 </tr>
               ) : (
                 filtered.map((resource) => {
                   const isCustom = resource.id.startsWith('custom-');
+                  const isSelected = selectedIds.has(resource.id);
                   return (
                     <tr
                       key={resource.id}
-                      className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 transition-colors"
+                      className={`transition-colors ${
+                        isSelected
+                          ? 'bg-rose-50/60 dark:bg-rose-950/20'
+                          : 'hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40'
+                      }`}
                     >
+                      {/* Checkbox */}
+                      <td className="px-4 py-4">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSelectRow(resource.id)}
+                          className="flex items-center justify-center text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
+                          ) : (
+                            <Square className="h-4 w-4" />
+                          )}
+                        </button>
+                      </td>
+
                       {/* Name & Description */}
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <ResourceLogo
                             slug={resource.slug}
@@ -405,7 +562,7 @@ export function AdminResourcesClient({
         </div>
       </div>
 
-      {/* Confirmation Dialog for Deleting Resource */}
+      {/* Confirmation Dialog for Deleting Single Resource */}
       {deletingResource && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 space-y-4">
@@ -420,7 +577,7 @@ export function AdminResourcesClient({
             </div>
 
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
-              Are you sure you want to delete <strong className="text-zinc-900 dark:text-zinc-100">&ldquo;{deletingResource.name}&rdquo;</strong>? It will be removed from the catalog.
+              Are you sure you want to permanently delete <strong className="text-zinc-900 dark:text-zinc-100">&ldquo;{deletingResource.name}&rdquo;</strong>? It will be removed from the catalog and will never resurrect.
             </p>
 
             <div className="flex justify-end gap-3 pt-2">
@@ -439,6 +596,46 @@ export function AdminResourcesClient({
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Resource'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Bulk Delete */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 dark:bg-red-950/60">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Confirm Bulk Deletion</h3>
+                <p className="text-xs text-zinc-500">This will permanently delete multiple resources.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              Are you sure you want to permanently delete all <strong className="text-zinc-900 dark:text-zinc-100">{selectedIds.size} selected resources</strong>? They will be removed and tombstoned so they never reappear.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBulkDeleteModal(false)}
+                disabled={isBulkDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleBulkDeleteConfirm}
+                disabled={isBulkDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isBulkDeleting ? 'Deleting...' : `Delete ${selectedIds.size} Resources`}
               </Button>
             </div>
           </div>

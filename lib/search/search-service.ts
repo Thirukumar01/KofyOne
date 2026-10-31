@@ -20,6 +20,20 @@ export class PostgresSearchService implements ISearchService {
 
     const supabase = await createClient();
 
+    const deletedIdentifiers = new Set<string>();
+    try {
+      const [delRes1, delRes2] = await Promise.all([
+        supabase.from('deleted_resource_slugs').select('slug'),
+        supabase.from('deleted_catalog_items').select('identifier').eq('item_type', 'resource'),
+      ]);
+      if (delRes1.data) {
+        delRes1.data.forEach((d: { slug: string }) => deletedIdentifiers.add(d.slug));
+      }
+      if (delRes2.data) {
+        delRes2.data.forEach((d: { identifier: string }) => deletedIdentifiers.add(d.identifier));
+      }
+    } catch {}
+
     const search = query.replace(/[%_,]/g, ' ').trim();
     let request = supabase.from('resources').select('*').eq('is_published', true);
     if (search) request = request.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
@@ -31,18 +45,24 @@ export class PostgresSearchService implements ISearchService {
 
     if (error) throw new Error(`Resource search failed: ${error.message}`);
 
-    const items: SearchResultItem[] = ((data as unknown[]) || []).map((row: unknown) => {
-      const typedRow = row as ResourceWithRelations & { rank: number };
-      return {
-        resource: typedRow,
-        rank: typedRow.rank || 0,
-      };
-    });
+    const items: SearchResultItem[] = ((data as unknown[]) || [])
+      .map((row: unknown) => {
+        const typedRow = row as ResourceWithRelations & { rank: number };
+        return {
+          resource: typedRow,
+          rank: typedRow.rank || 0,
+        };
+      })
+      .filter(
+        (item) =>
+          !deletedIdentifiers.has(item.resource.id) && !deletedIdentifiers.has(item.resource.slug)
+      );
 
     try {
       const { getCustomResources } = await import('@/lib/data/custom-resources');
       const customMatches = getCustomResources().filter((r) => {
         if (!r.is_published) return false;
+        if (deletedIdentifiers.has(r.id) || deletedIdentifiers.has(r.slug)) return false;
         if (search && !`${r.name} ${r.description}`.toLowerCase().includes(search.toLowerCase())) return false;
         if (filters?.platformId && r.platform_id !== filters.platformId) return false;
         return true;
