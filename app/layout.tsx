@@ -29,11 +29,11 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('kofyone-theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var el=document.documentElement;el.classList.toggle('dark',d);el.classList.toggle('light',!d);el.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('kofyone-theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var el=document.documentElement;el.classList.toggle('dark',d);el.classList.toggle('light',!d);el.setAttribute('data-theme',d?'dark':'light');if(document.body){document.body.classList.toggle('dark',d);document.body.classList.toggle('light',!d);document.body.setAttribute('data-theme',d?'dark':'light');}}catch(e){}})();`,
           }}
         />
       </head>
-      <body className="flex min-h-full flex-col bg-white text-slate-900 font-sans transition-colors duration-150 dark:bg-zinc-950 dark:text-zinc-50">
+      <body className="flex min-h-full flex-col bg-[#FFF5F4] text-[#292526] font-sans transition-colors duration-150 dark:bg-[#151517] dark:text-[#F6F5F3]">
         <ThemeProvider>
           <AnalyticsProvider>
             <Header />

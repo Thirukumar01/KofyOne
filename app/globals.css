@@ -82,3 +82,201 @@ body {
   min-height: 100vh;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* ==========================================================================
+   GLOBAL HIGH-PRIORITY THEME OVERRIDES
+   Ensures hardcoded utility classes adapt cleanly to custom light & dark palettes
+   ========================================================================== */
+
+/* LIGHT THEME ENFORCEMENT */
+html.light,
+html[data-theme="light"],
+:root:not(.dark) {
+  /* Page & Layout Backgrounds */
+  body,
+  main,
+  .bg-zinc-950,
+  .bg-neutral-950,
+  .bg-slate-950,
+  .bg-black {
+    background-color: #FFF5F4 !important;
+    color: #292526 !important;
+  }
+
+  /* Cards & Elevated Surfaces */
+  .bg-zinc-900,
+  .bg-zinc-900\/50,
+  .bg-zinc-900\/80,
+  .bg-neutral-900,
+  .bg-slate-900,
+  header,
+  footer {
+    background-color: #FFFFFF !important;
+    border-color: #F0DCDD !important;
+    color: #292526 !important;
+  }
+
+  /* Secondary / Input / Pill Surfaces */
+  .bg-zinc-800,
+  .bg-zinc-800\/50,
+  .bg-neutral-800,
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    background-color: #FCECEB !important;
+    border-color: #E6C8C9 !important;
+    color: #292526 !important;
+  }
+
+  /* Heading Text */
+  h1:not(button *):not([class*="bg-[#B94A50]"] *),
+  h2:not(button *):not([class*="bg-[#B94A50]"] *),
+  h3:not(button *):not([class*="bg-[#B94A50]"] *),
+  h4:not(button *):not([class*="bg-[#B94A50]"] *),
+  h5:not(button *):not([class*="bg-[#B94A50]"] *),
+  h6:not(button *):not([class*="bg-[#B94A50]"] *),
+  .text-white:not(button *):not([class*="bg-[#B94A50]"] *):not([data-variant="brand"] *):not(.bg-emerald-600 *):not(.bg-red-600 *):not([data-variant="primary"] *),
+  .text-zinc-50:not(button *):not([class*="bg-[#B94A50]"] *),
+  .text-zinc-100:not(button *):not([class*="bg-[#B94A50]"] *),
+  .text-zinc-200:not(button *):not([class*="bg-[#B94A50]"] *) {
+    color: #292526 !important;
+  }
+
+  /* Secondary Text */
+  p:not(button *):not([class*="bg-[#B94A50]"] *):not([data-variant="brand"] *),
+  .text-zinc-300:not(button *):not([class*="bg-[#B94A50]"] *),
+  .text-zinc-400:not(button *):not([class*="bg-[#B94A50]"] *),
+  .text-zinc-500:not(button *):not([class*="bg-[#B94A50]"] *),
+  .text-neutral-400:not(button *):not([class*="bg-[#B94A50]"] *),
+  .text-slate-400:not(button *):not([class*="bg-[#B94A50]"] *) {
+    color: #777171 !important;
+  }
+
+  /* Primary / Button / Accent */
+  .btn-primary,
+  button[data-variant="primary"],
+  .bg-primary,
+  [data-theme-primary="true"] {
+    background-color: #B94A50 !important;
+    color: #FFFFFF !important;
+  }
+
+  .btn-primary:hover,
+  button[data-variant="primary"]:hover {
+    background-color: #A13D43 !important;
+  }
+}
+
+/* Ensure buttons and badges with primary brand background keep white text in Light Theme */
+html.light button[data-variant="primary"],
+html.light button[data-variant="primary"] *,
+html.light .btn-primary,
+html.light .btn-primary *,
+html.light .bg-\[\#B94A50\],
+html.light .bg-\[\#B94A50\] *,
+html.light [class*="bg-[#B94A50]"],
+html.light [class*="bg-[#B94A50]"] *,
+html[data-theme="light"] button[data-variant="primary"],
+html[data-theme="light"] button[data-variant="primary"] *,
+html[data-theme="light"] .bg-\[\#B94A50\],
+html[data-theme="light"] .bg-\[\#B94A50\] *,
+html[data-theme="light"] [class*="bg-[#B94A50]"],
+html[data-theme="light"] [class*="bg-[#B94A50]"] * {
+  color: #FFFFFF !important;
+}
+
+/* DARK THEME ENFORCEMENT */
+html.dark,
+html[data-theme="dark"] {
+  /* Page & Layout Backgrounds */
+  body,
+  main,
+  .bg-zinc-950,
+  .bg-neutral-950,
+  .bg-slate-950,
+  .bg-black {
+    background-color: #151517 !important;
+    color: #F6F5F3 !important;
+  }
+
+  /* Cards & Elevated Surfaces */
+  .bg-zinc-900,
+  .bg-zinc-900\/50,
+  .bg-zinc-900\/80,
+  .bg-neutral-900,
+  .bg-slate-900,
+  header,
+  footer {
+    background-color: #1E1E22 !important;
+    border-color: #2E2C30 !important;
+    color: #F6F5F3 !important;
+  }
+
+  /* Secondary / Input / Pill Surfaces */
+  .bg-zinc-800,
+  .bg-zinc-800\/50,
+  .bg-neutral-800,
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    background-color: #252429 !important;
+    border-color: #38353C !important;
+    color: #F6F5F3 !important;
+  }
+
+  /* Accent Headings & Section Eyebrows */
+  .accent-heading,
+  .text-accent-heading,
+  [data-accent-heading="true"] {
+    color: #D98C91 !important;
+  }
+
+  /* Primary Text */
+  h1, h2, h3, h4, h5, h6,
+  .text-white,
+  .text-zinc-50,
+  .text-zinc-100,
+  .text-zinc-200 {
+    color: #F6F5F3 !important;
+  }
+
+  /* Secondary Text */
+  .text-zinc-400,
+  .text-zinc-500,
+  .text-neutral-400 {
+    color: #A8A2A2 !important;
+  }
+
+  /* Primary / Button / Accent */
+  .btn-primary,
+  button[data-variant="primary"],
+  .bg-primary,
+  [data-theme-primary="true"] {
+    background-color: #B94A50 !important;
+    color: #F6F5F3 !important;
+  }
+
+  .btn-primary:hover,
+  button[data-variant="primary"]:hover {
+    background-color: #C85A60 !important;
+  }
+}
+
+/* Ensure buttons and badges with primary brand background keep warm white text in Dark Theme */
+html.dark button[data-variant="primary"],
+html.dark button[data-variant="primary"] *,
+html.dark .btn-primary,
+html.dark .btn-primary *,
+html.dark .bg-\[\#B94A50\],
+html.dark .bg-\[\#B94A50\] *,
+html.dark [class*="bg-[#B94A50]"],
+html.dark [class*="bg-[#B94A50]"] *,
+html[data-theme="dark"] button[data-variant="primary"],
+html[data-theme="dark"] button[data-variant="primary"] *,
+html[data-theme="dark"] .bg-\[\#B94A50\],
+html[data-theme="dark"] .bg-\[\#B94A50\] *,
+html[data-theme="dark"] [class*="bg-[#B94A50]"],
+html[data-theme="dark"] [class*="bg-[#B94A50]"] * {
+  color: #F6F5F3 !important;
+}
+

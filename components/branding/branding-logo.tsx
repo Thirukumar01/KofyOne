@@ -65,6 +65,7 @@ export function BrandingLogo({
         </div>
       ) : (
         <div
+          style={{ backgroundColor: branding?.brand_color || '#B94A50' }}
           className={cn(
             'flex items-center justify-center rounded-xl bg-[#B94A50] text-white dark:text-[#F6F5F3] shadow-sm transition-transform hover:scale-105',
             variant === 'compact' || variant === 'square'

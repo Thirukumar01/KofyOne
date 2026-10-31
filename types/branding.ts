@@ -13,6 +13,7 @@ export interface SiteBranding {
   square_icon_url: string | null;
   favicon_url: string | null;
   logo_alt: string;
+  brand_color?: string;
   updated_at: string;
   updated_by?: string | null;
 }
@@ -32,5 +33,6 @@ export const DEFAULT_SITE_BRANDING: SiteBranding = {
   square_icon_url: null,
   favicon_url: null,
   logo_alt: 'KofyOne Brand Logo',
+  brand_color: '#B94A50',
   updated_at: new Date().toISOString(),
 };

@@ -100,6 +100,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.remove('dark', 'light');
     root.classList.add(resolvedTheme);
     root.setAttribute('data-theme', resolvedTheme);
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.remove('dark', 'light');
+      document.body.classList.add(resolvedTheme);
+      document.body.setAttribute('data-theme', resolvedTheme);
+    }
   }, [resolvedTheme]);
 
   const setTheme = (newTheme: Theme) => {
