@@ -109,8 +109,8 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
             rel="noopener noreferrer"
             className="inline-flex"
           >
-            <Button size="lg" className="shadow-sm gap-2">
-              <span>Open Official Resource</span>
+            <Button size="lg" className="shadow-sm gap-2 bg-[#B94A50] hover:bg-[#A13D43] text-white dark:text-[#F6F5F3]">
+              <span>Visit Official Resource</span>
               <ExternalLink className="h-4 w-4" />
             </Button>
           </a>

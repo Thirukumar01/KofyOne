@@ -105,7 +105,7 @@ export function ResourceCard({
             className="inline-flex h-8 items-center justify-center rounded-lg bg-[#B94A50] hover:bg-[#A13D43] active:bg-[#8D3338] dark:hover:bg-[#C85A60] px-3 text-xs font-semibold text-white dark:text-[#F6F5F3] shadow-xs transition-colors"
             title="Open official destination"
           >
-            <span>Open</span>
+            <span>Open Resource</span>
             <ExternalLink className="ml-1 h-3 w-3" />
           </a>
         </div>

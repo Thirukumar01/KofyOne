@@ -444,10 +444,10 @@ function SettingsContent() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
-                Select Curated Preset Avatar
+                Select Profile Avatar
               </CardTitle>
               <CardDescription className="text-xs">
-                Choose one of 6 official badges for your profile. External photo uploads and URLs are disabled for clean platform safety.
+                Choose an official badge for your profile avatar.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -513,7 +513,7 @@ function SettingsContent() {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Username (Immutable)
+                      Username
                     </label>
                     <div className="flex h-10 items-center rounded-lg border border-zinc-200 bg-zinc-50 px-3 font-mono text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400">
                       {usernameDisplay}
@@ -523,7 +523,7 @@ function SettingsContent() {
 
                 <div className="space-y-1.5">
                   <label htmlFor="bio" className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                    Short Bio / Headline
+                    Bio
                   </label>
                   <Input
                     id="bio"
@@ -542,7 +542,7 @@ function SettingsContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label htmlFor="role-focus" className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Primary Learner Role / Stage
+                      Learner Stage
                     </label>
                     <select
                       id="role-focus"
@@ -559,7 +559,7 @@ function SettingsContent() {
 
                   <div className="space-y-1.5">
                     <label htmlFor="platform-pref" className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Primary Ecosystem Focus
+                      Preferred Ecosystem
                     </label>
                     <select
                       id="platform-pref"
@@ -607,7 +607,7 @@ function SettingsContent() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Palette className="h-4 w-4 text-[#B94A50] dark:text-[#D98C91]" />
-                Theme Engine & Color Scheme
+                Theme & Color Scheme
               </CardTitle>
               <CardDescription className="text-xs">
                 Switch instantly between Dark Mode, Light (White) Mode, and System synchronization.

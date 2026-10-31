@@ -22,7 +22,7 @@ export default async function HomePage() {
       <section className="flex flex-col items-center text-center">
         <Badge variant="brand" className="mb-4 flex items-center gap-1.5 shadow-sm">
           <Sparkles className="h-3.5 w-3.5" />
-          Multi-Provider Technology Resource Discovery
+          Official Student Cloud Credits &amp; Developer Packs
         </Badge>
 
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-50">
@@ -43,9 +43,9 @@ export default async function HomePage() {
               Explore All Resources <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/admin">
+          <Link href="/categories">
             <Button variant="outline" size="lg">
-              Admin CMS Portal
+              Browse by Category
             </Button>
           </Link>
         </div>

@@ -109,7 +109,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Se
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
             Explore Resources
           </h1>
-          <Badge variant="brand">Multi-Provider</Badge>
+          <Badge variant="brand">Verified Official Programs</Badge>
           <span className="text-xs text-zinc-500 font-medium">({filtered.length} available)</span>
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-2xl">

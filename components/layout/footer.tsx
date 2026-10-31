@@ -95,11 +95,6 @@ export async function Footer() {
                   Privacy Policy
                 </Link>
               </li>
-              <li>
-                <Link href="/admin/legal" className="text-[#777171] hover:text-[#292526] dark:text-[#A8A2A2] dark:hover:text-[#F6F5F3] transition-colors">
-                  Admin CMS
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

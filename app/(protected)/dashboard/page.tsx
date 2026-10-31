@@ -76,7 +76,7 @@ export default async function DashboardPage() {
               </div>
               <CardTitle className="text-lg mt-3">Saved Resources</CardTitle>
               <CardDescription className="text-xs">
-                Your bookmarked Microsoft tools, documentation, and learning paths.
+                Your bookmarked cloud tools, developer packs, and learning paths.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -136,8 +136,8 @@ export default async function DashboardPage() {
           </Card>
         </Link>
 
-        {/* Microsoft Ecosystem */}
-        <Link href="/platforms/microsoft">
+        {/* Ecosystem Platforms */}
+        <Link href="/platforms">
           <Card className="h-full hover:border-[#B94A50] dark:hover:border-[#D98C91] transition-colors group">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -146,9 +146,9 @@ export default async function DashboardPage() {
                 </div>
                 <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#B94A50] dark:group-hover:text-[#D98C91] transition-colors" />
               </div>
-              <CardTitle className="text-lg mt-3">Microsoft Ecosystem</CardTitle>
+              <CardTitle className="text-lg mt-3">Cloud Platforms</CardTitle>
               <CardDescription className="text-xs">
-                Official learning tracks, certification guides, and student offers.
+                Official learning paths, certification guides, and student cloud offers.
               </CardDescription>
             </CardHeader>
           </Card>

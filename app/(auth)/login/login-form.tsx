@@ -164,7 +164,7 @@ export function LoginForm() {
           if (/confirmation email/i.test(errMsg)) {
             setStatus('error');
             setMessage(
-              `To enable instant dummy-email logins, disable 'Confirm email' under Supabase Dashboard → Authentication → Providers → Email.`
+              `Please verify your account or contact support if you need assistance logging in.`
             );
             return;
           }
@@ -200,7 +200,7 @@ export function LoginForm() {
         if (signInAfterErr && /email not confirmed/i.test(signInAfterErr.message)) {
           setStatus('error');
           setMessage(
-            `Account created! Note: Please disable 'Confirm email' in Supabase Dashboard → Authentication → Providers → Email for instant dummy-email logins.`
+            `Account created! Please sign in with your username and password or PIN.`
           );
           return;
         }
@@ -319,7 +319,7 @@ export function LoginForm() {
 
           setStatus('error');
           setMessage(
-            `Account created! If login does not complete, please disable 'Confirm email' under Supabase Dashboard → Authentication → Providers → Email.`
+            `Account created! Please sign in with your username and password.`
           );
           return;
         }
@@ -327,7 +327,7 @@ export function LoginForm() {
         if (signUpError && /confirmation email/i.test(signUpError.message)) {
           setStatus('error');
           setMessage(
-            `Account registration notice: Please turn off 'Confirm email' in Supabase Dashboard → Authentication → Providers → Email for instant logins.`
+            `Account created! Please sign in with your credentials.`
           );
           setSuggestSignUp(true);
           return;
@@ -566,10 +566,10 @@ export function LoginForm() {
           </Button>
         </div>
 
-        {/* Helpful Session Persistence Note */}
+        {/* Helpful Session Note */}
         <div className="pt-1 flex items-center justify-center gap-1.5 text-center text-[11px] text-zinc-400 dark:text-zinc-500">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-          <span>Session persistence enabled — stay logged in automatically</span>
+          <span>Stay signed in securely on this device</span>
         </div>
       </form>
     </div>
